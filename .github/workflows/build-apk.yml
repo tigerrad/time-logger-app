@@ -1,4 +1,4 @@
-name: Build APK
+name: Build and Release APK
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -32,9 +34,22 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Upload APK
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: time-logger-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "تایم لاگر v1.0.${{ github.run_number }}"
+          body: |
+            نسخه جدید برنامه تایم لاگر — سازنده: کورش شیراز
+            
+            برای دانلود، روی فایل `app-release.apk` در پایین کلیک کنید.
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
