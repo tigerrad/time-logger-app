@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'models/domain.dart';
 import 'models/time_entry.dart';
 import 'models/goal.dart';
@@ -7,6 +7,7 @@ import 'models/meeting.dart';
 import 'models/finance_transaction.dart';
 import 'models/finance_category.dart';
 import 'services/store.dart';
+import 'services/notification_service.dart';
 import 'screens/timer_screen.dart';
 import 'screens/goals_screen.dart';
 import 'screens/savings_screen.dart';
@@ -15,13 +16,14 @@ import 'screens/reports_screen.dart';
 import 'screens/finance_screen.dart';
 import 'widgets/common.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.init();
   runApp(const TimeLoggerApp());
 }
 
 class TimeLoggerApp extends StatelessWidget {
   const TimeLoggerApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
