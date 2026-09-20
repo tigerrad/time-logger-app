@@ -4,12 +4,15 @@ import 'models/time_entry.dart';
 import 'models/goal.dart';
 import 'models/saving.dart';
 import 'models/meeting.dart';
+import 'models/finance_transaction.dart';
+import 'models/finance_category.dart';
 import 'services/store.dart';
 import 'screens/timer_screen.dart';
 import 'screens/goals_screen.dart';
 import 'screens/savings_screen.dart';
 import 'screens/meetings_screen.dart';
 import 'screens/reports_screen.dart';
+import 'screens/finance_screen.dart';
 import 'widgets/common.dart';
 
 void main() {
@@ -64,6 +67,8 @@ class _HomePageState extends State<HomePage> {
   List<Goal> goals = [];
   List<Saving> savings = [];
   List<Meeting> meetings = [];
+  List<FinanceTransaction> financeTransactions = [];
+  List<FinanceCategory> financeCategories = [];
   bool _loading = true;
 
   @override
@@ -78,6 +83,8 @@ class _HomePageState extends State<HomePage> {
     goals = await Store.loadGoals();
     savings = await Store.loadSavings();
     meetings = await Store.loadMeetings();
+    financeTransactions = await Store.loadFinanceTransactions();
+    financeCategories = await Store.loadFinanceCategories();
     if (!mounted) return;
     setState(() => _loading = false);
   }
@@ -96,6 +103,11 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _saveMeetings() async {
     await Store.saveMeetings(meetings);
+  }
+
+  Future<void> _saveFinance() async {
+    await Store.saveFinanceTransactions(financeTransactions);
+    await Store.saveFinanceCategories(financeCategories);
   }
 
   @override
@@ -141,12 +153,21 @@ class _HomePageState extends State<HomePage> {
           setState(() {});
         },
       ),
+      FinanceScreen(
+        transactions: financeTransactions,
+        categories: financeCategories,
+        onChanged: () async {
+          await _saveFinance();
+          if (!mounted) return;
+          setState(() {});
+        },
+      ),
       ReportsScreen(entries: entries),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تایم لاگر — سازنده: کورش شیراز', style: TextStyle(fontSize: 15)),
+        title: const Text('تایم لاگر — سازنده: کورش شیراز', style: TextStyle(fontSize: 14)),
         centerTitle: true,
       ),
       body: IndexedStack(index: _selectedIndex, children: pages),
@@ -155,11 +176,13 @@ class _HomePageState extends State<HomePage> {
         onDestinationSelected: (i) => setState(() => _selectedIndex = i),
         backgroundColor: const Color(0xFF26262E),
         indicatorColor: AppColors.primary.withOpacity(0.3),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.timer), label: 'تایم'),
           NavigationDestination(icon: Icon(Icons.flag), label: 'اهداف'),
           NavigationDestination(icon: Icon(Icons.savings), label: 'پس‌انداز'),
           NavigationDestination(icon: Icon(Icons.event), label: 'جلسات'),
+          NavigationDestination(icon: Icon(Icons.account_balance_wallet), label: 'مالی'),
           NavigationDestination(icon: Icon(Icons.bar_chart), label: 'گزارش'),
         ],
       ),
