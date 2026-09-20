@@ -1,7 +1,7 @@
 ﻿name: time_logger_app
 description: "تایم لاگر — سازنده: کورش شیراز"
 publish_to: 'none'
-version: 1.2.0+3
+version: 1.4.0+5
 
 environment:
   sdk: ^3.5.4
@@ -18,6 +18,11 @@ dependencies:
   path_provider: ^2.1.4
   share_plus: ^10.0.2
   device_calendar: ^4.3.2
+  syncfusion_flutter_pdfviewer: ^27.1.48
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+  audioplayers: ^6.1.0
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:
@@ -37,3 +42,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/
+    - assets/sounds/
+    - assets/publications/

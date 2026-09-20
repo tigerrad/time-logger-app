@@ -12,6 +12,7 @@ build/
 android/.gradle/
 android/local.properties
 android/key.properties
+android/keystore/
 *.jks
 *.keystore
 
@@ -25,3 +26,6 @@ desktop.ini
 # APK output
 time-logger-apk/
 *.apk
+
+# Debug info
+debug-info/
