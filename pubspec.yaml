@@ -1,5 +1,5 @@
 name: time_logger_app
-description: "تایم لاگر — سازنده: کورش شیراز"
+description: "ØªØ§ÛŒÙ… Ù„Ø§Ú¯Ø± â€” Ø³Ø§Ø²Ù†Ø¯Ù‡: Ú©ÙˆØ±Ø´ Ø´ÛŒØ±Ø§Ø²"
 publish_to: 'none'
 version: 1.4.0+5
 
@@ -42,5 +42,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/
-    - assets/sounds/
     - assets/publications/
