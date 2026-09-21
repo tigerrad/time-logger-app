@@ -1,4 +1,4 @@
-﻿
+
 List<int> gregorianToJalali(DateTime g) {
   final gy = g.year;
   final gm = g.month;
