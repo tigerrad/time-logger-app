@@ -30,8 +30,9 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          mkdir -p android/keystore
+          mkdir -p android/keystore android/app/keystore
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/keystore/timelogger.jks
+          cp android/keystore/timelogger.jks android/app/keystore/timelogger.jks
           echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
           echo "keyAlias=timelogger" >> android/key.properties
@@ -63,8 +64,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: "تایم لاگر v1.0.${{ github.run_number }}"
-          body: "نسخه جدید برنامه تایم لاگر — سازنده: کورش شیراز"
+          name: "ØªØ§ÛŒÙ… Ù„Ø§Ú¯Ø± v1.0.${{ github.run_number }}"
+          body: "Ù†Ø³Ø®Ù‡ Ø¬Ø¯ÛŒØ¯ Ø¨Ø±Ù†Ø§Ù…Ù‡ ØªØ§ÛŒÙ… Ù„Ø§Ú¯Ø± â€” Ø³Ø§Ø²Ù†Ø¯Ù‡: Ú©ÙˆØ±Ø´ Ø´ÛŒØ±Ø§Ø²"
           files: build/app/outputs/flutter-apk/timelogger-*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
