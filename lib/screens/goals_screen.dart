@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/domain.dart';
 import '../models/goal.dart';
 import '../widgets/common.dart';
@@ -205,16 +205,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
       decoration: BoxDecoration(
         color: AppColors.input,
         borderRadius: BorderRadius.circular(8),
-        border: const Border(left: BorderSide(color: AppColors.primary, width: 4)),
+        border: Border(left: BorderSide(color: _levelColor(g.level), width: 4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(g.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              ),
+              Expanded(child: Text(g.title, style: const TextStyle(fontWeight: FontWeight.bold))),
               IconButton(
                 icon: const Icon(Icons.edit, color: AppColors.warning, size: 20),
                 onPressed: () => _editProgress(g),

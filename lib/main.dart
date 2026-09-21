@@ -12,8 +12,8 @@ import 'screens/timer_screen.dart';
 import 'screens/goals_screen.dart';
 import 'screens/savings_screen.dart';
 import 'screens/meetings_screen.dart';
-import 'screens/reports_screen.dart';
 import 'screens/finance_screen.dart';
+import 'screens/reports_screen.dart';
 import 'widgets/common.dart';
 
 void main() async {
@@ -24,6 +24,7 @@ void main() async {
 
 class TimeLoggerApp extends StatelessWidget {
   const TimeLoggerApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -69,8 +70,8 @@ class _HomePageState extends State<HomePage> {
   List<Goal> goals = [];
   List<Saving> savings = [];
   List<Meeting> meetings = [];
-  List<FinanceTransaction> financeTransactions = [];
-  List<FinanceCategory> financeCategories = [];
+  List<FinanceTransaction> financeTx = [];
+  List<FinanceCategory> financeCat = [];
   bool _loading = true;
 
   @override
@@ -85,31 +86,19 @@ class _HomePageState extends State<HomePage> {
     goals = await Store.loadGoals();
     savings = await Store.loadSavings();
     meetings = await Store.loadMeetings();
-    financeTransactions = await Store.loadFinanceTransactions();
-    financeCategories = await Store.loadFinanceCategories();
+    financeTx = await Store.loadFinanceTransactions();
+    financeCat = await Store.loadFinanceCategories();
     if (!mounted) return;
     setState(() => _loading = false);
   }
 
-  Future<void> _saveEntries() async {
-    await Store.saveEntries(entries);
-  }
-
-  Future<void> _saveGoals() async {
-    await Store.saveGoals(goals);
-  }
-
-  Future<void> _saveSavings() async {
-    await Store.saveSavings(savings);
-  }
-
-  Future<void> _saveMeetings() async {
-    await Store.saveMeetings(meetings);
-  }
-
+  Future<void> _saveEntries() async => await Store.saveEntries(entries);
+  Future<void> _saveGoals() async => await Store.saveGoals(goals);
+  Future<void> _saveSavings() async => await Store.saveSavings(savings);
+  Future<void> _saveMeetings() async => await Store.saveMeetings(meetings);
   Future<void> _saveFinance() async {
-    await Store.saveFinanceTransactions(financeTransactions);
-    await Store.saveFinanceCategories(financeCategories);
+    await Store.saveFinanceTransactions(financeTx);
+    await Store.saveFinanceCategories(financeCat);
   }
 
   @override
@@ -156,8 +145,8 @@ class _HomePageState extends State<HomePage> {
         },
       ),
       FinanceScreen(
-        transactions: financeTransactions,
-        categories: financeCategories,
+        transactions: financeTx,
+        categories: financeCat,
         onChanged: () async {
           await _saveFinance();
           if (!mounted) return;
@@ -169,7 +158,10 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تایم لاگر — سازنده: کورش شیراز', style: TextStyle(fontSize: 14)),
+        title: const Text(
+          'تایم لاگر — سازنده: کورش شیراز',
+          style: TextStyle(fontSize: 14),
+        ),
         centerTitle: true,
       ),
       body: IndexedStack(index: _selectedIndex, children: pages),

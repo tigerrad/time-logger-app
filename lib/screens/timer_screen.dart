@@ -24,7 +24,6 @@ class TimerScreen extends StatefulWidget {
 }
 
 class _TimerScreenState extends State<TimerScreen> {
-  // ÃƒËœÃ‚Â­ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Âª ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â±
   bool _isRunning = false;
   bool _isPaused = false;
   DateTime? _startTime;
@@ -33,10 +32,9 @@ class _TimerScreenState extends State<TimerScreen> {
   String? _selectedDomain;
   final TextEditingController _noteCtrl = TextEditingController();
   Timer? _ticker;
-  int? _alarmAtSeconds; // ÃƒËœÃ‚Â²Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â  ÃƒËœÃ‚Â¢Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â¨Ãƒâ„¢Ã¢â‚¬Â¡ ÃƒËœÃ‚Â«ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Â¡
+  int? _alarmAtSeconds;
   bool _alarmFired = false;
 
-  // ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒâ€ºÃ…â€™
   final TextEditingController _manualMinCtrl = TextEditingController();
   final TextEditingController _alarmMinCtrl = TextEditingController();
   DateTime _manualDate = DateTime.now();
@@ -60,7 +58,6 @@ class _TimerScreenState extends State<TimerScreen> {
     super.dispose();
   }
 
-  // ============ ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â§ÃƒËœÃ‚Â²Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨Ãƒâ€ºÃ…â€™ ÃƒËœÃ‚Â­ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Âª ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â± ============
   Future<void> _restoreTimerState() async {
     final state = await Store.loadTimerState();
     if (!mounted) return;
@@ -77,7 +74,6 @@ class _TimerScreenState extends State<TimerScreen> {
     }
   }
 
-  // ============ ÃƒËœÃ‚Â°ÃƒËœÃ‚Â®Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬Â¡ ÃƒËœÃ‚Â­ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Âª ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â± ============
   Future<void> _persistTimerState() async {
     await Store.saveTimerState(
       running: _isRunning,
@@ -90,7 +86,6 @@ class _TimerScreenState extends State<TimerScreen> {
     );
   }
 
-  // ============ ÃƒËœÃ‚ÂªÃƒâ€ºÃ…â€™ÃƒÅ¡Ã‚Â©ÃƒËœÃ‚Â± ============
   void _startTicker() {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -108,16 +103,15 @@ class _TimerScreenState extends State<TimerScreen> {
       _alarmFired = true;
       NotificationService.show(
         id: 200,
-        title: 'Ã¢ÂÂ° Ã˜Â²Ã™â€¦Ã˜Â§Ã™â€  Ã˜ÂªÃ™â€¦Ã˜Â§Ã™â€¦ Ã˜Â´Ã˜Â¯!',
-        body: 'Ã˜ÂªÃ˜Â§Ã›Å’Ã™â€¦Ã˜Â± "${_selectedDomain}" Ã˜Â¨Ã™â€¡ Ã™Â¾Ã˜Â§Ã›Å’Ã˜Â§Ã™â€  Ã˜Â±Ã˜Â³Ã›Å’Ã˜Â¯',
+        title: '⏰ زمان تمام شد!',
+        body: 'تایمر $_selectedDomain به پایان رسید',
       );
       if (mounted) {
-        showSnack(context, 'Ã¢ÂÂ° Ã˜Â¢Ã™â€žÃ˜Â§Ã˜Â±Ã™â€¦! Ã˜Â²Ã™â€¦Ã˜Â§Ã™â€  Ã˜ÂªÃ™â€¦Ã˜Â§Ã™â€¦ Ã˜Â´Ã˜Â¯', color: AppColors.primary);
+        showSnack(context, '⏰ آلارم! زمان تمام شد', color: AppColors.primary);
       }
     }
   }
 
-  // ============ Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â­ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³ÃƒËœÃ‚Â¨Ãƒâ„¢Ã¢â‚¬Â¡ ÃƒËœÃ‚Â²Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â  ÃƒËœÃ‚Â³Ãƒâ„¢Ã‚Â¾ÃƒËœÃ‚Â±Ãƒâ€ºÃ…â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€™ÃƒËœÃ‚Â´ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¡ ============
   Duration _elapsed() {
     if (_startTime == null) return Duration.zero;
     final now = _isPaused && _pausedAt != null ? _pausedAt! : DateTime.now();
@@ -134,10 +128,9 @@ class _TimerScreenState extends State<TimerScreen> {
     return '$h:$m:$s';
   }
 
-  // ============ ÃƒËœÃ‚Â´ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¹ ============
   Future<void> _start() async {
     if (_selectedDomain == null) {
-      showSnack(context, 'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ Ãƒâ€ºÃ…â€™ÃƒÅ¡Ã‚Â© ÃƒËœÃ‚Â­Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â²Ãƒâ„¢Ã¢â‚¬Â¡ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨ ÃƒÅ¡Ã‚Â©Ãƒâ„¢Ã¢â‚¬Â Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â¯', color: AppColors.danger);
+      showSnack(context, 'ابتدا یک حوزه انتخاب کنید', color: AppColors.danger);
       return;
     }
     final alarmMin = int.tryParse(_alarmMinCtrl.text);
@@ -153,7 +146,6 @@ class _TimerScreenState extends State<TimerScreen> {
     await _persistTimerState();
   }
 
-  // ============ Pause ============
   Future<void> _pause() async {
     if (!_isRunning || _isPaused) return;
     setState(() {
@@ -163,7 +155,6 @@ class _TimerScreenState extends State<TimerScreen> {
     await _persistTimerState();
   }
 
-  // ============ Resume ============
   Future<void> _resume() async {
     if (!_isRunning || !_isPaused || _pausedAt == null) return;
     final pausedDuration = DateTime.now().difference(_pausedAt!);
@@ -175,18 +166,15 @@ class _TimerScreenState extends State<TimerScreen> {
     await _persistTimerState();
   }
 
-  // ============ ÃƒËœÃ‚ÂªÃƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã‚Â Ãƒâ„¢Ã‹â€  ÃƒËœÃ‚Â°ÃƒËœÃ‚Â®Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬Â¡ ============
   Future<void> _stop() async {
     if (_startTime == null) return;
     final now = DateTime.now();
     final elapsed = _elapsed();
     final mins = elapsed.inMinutes;
     final finalMins = mins < 1 ? 1 : mins;
-
     final newId = widget.entries.isEmpty
         ? 1
         : (widget.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
-
     widget.entries.add(TimeEntry(
       id: newId,
       domain: _selectedDomain!,
@@ -195,10 +183,8 @@ class _TimerScreenState extends State<TimerScreen> {
       minutes: finalMins,
       note: _noteCtrl.text,
     ));
-
     await widget.onChanged();
     await Store.clearTimerState();
-
     if (!mounted) return;
     setState(() {
       _isRunning = false;
@@ -207,30 +193,30 @@ class _TimerScreenState extends State<TimerScreen> {
       _pausedAt = null;
       _totalPausedSeconds = 0;
       _noteCtrl.clear();
+      _alarmMinCtrl.clear();
+      _alarmAtSeconds = null;
+      _alarmFired = false;
     });
-
-    if (mounted) showSnack(context, 'ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª ÃƒËœÃ‚Â´ÃƒËœÃ‚Â¯: $finalMins ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬Â¡', color: AppColors.primary);
+    if (mounted) {
+      showSnack(context, 'ثبت شد: $finalMins دقیقه', color: AppColors.primary);
+    }
   }
 
-  // ============ ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒâ€ºÃ…â€™ ============
   Future<void> _manualAdd() async {
     final m = int.tryParse(_manualMinCtrl.text);
     if (m == null || m < 1) {
-      showSnack(context, 'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¯ÃƒËœÃ‚Âª Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¹ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¨ÃƒËœÃ‚Â± Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¯ ÃƒÅ¡Ã‚Â©Ãƒâ„¢Ã¢â‚¬Â Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â¯', color: AppColors.danger);
+      showSnack(context, 'مدت معتبر وارد کنید', color: AppColors.danger);
       return;
     }
     if (_selectedDomain == null) {
-      showSnack(context, 'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨ÃƒËœÃ‚ÂªÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â­Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â²Ãƒâ„¢Ã¢â‚¬Â¡ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨ ÃƒÅ¡Ã‚Â©Ãƒâ„¢Ã¢â‚¬Â Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â¯', color: AppColors.danger);
+      showSnack(context, 'ابتدا حوزه انتخاب کنید', color: AppColors.danger);
       return;
     }
-
     final end = _manualDate;
     final start = end.subtract(Duration(minutes: m));
-
     final newId = widget.entries.isEmpty
         ? 1
         : (widget.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
-
     widget.entries.add(TimeEntry(
       id: newId,
       domain: _selectedDomain!,
@@ -239,17 +225,15 @@ class _TimerScreenState extends State<TimerScreen> {
       minutes: m,
       note: _noteCtrl.text,
     ));
-
     await widget.onChanged();
     if (!mounted) return;
     setState(() {
       _manualMinCtrl.clear();
       _noteCtrl.clear();
     });
-    showSnack(context, 'ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒâ€ºÃ…â€™ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦ ÃƒËœÃ‚Â´ÃƒËœÃ‚Â¯: $m ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬Â¡', color: AppColors.secondary);
+    showSnack(context, 'ثبت دستی انجام شد: $m دقیقه', color: AppColors.secondary);
   }
 
-  // ============ Ãƒâ„¢Ã‹â€ Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â´ Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯Ãƒâ€ºÃ…â€™ ============
   Future<void> _editEntry(TimeEntry entry) async {
     final minCtrl = TextEditingController(text: entry.minutes.toString());
     final noteCtrl = TextEditingController(text: entry.note);
@@ -262,7 +246,7 @@ class _TimerScreenState extends State<TimerScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text('Ãƒâ„¢Ã‹â€ Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â´ Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯Ãƒâ€ºÃ…â€™', style: TextStyle(color: Colors.white)),
+          title: const Text('ویرایش ورودی', style: TextStyle(color: Colors.white)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -281,7 +265,7 @@ class _TimerScreenState extends State<TimerScreen> {
                   controller: minCtrl,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelText: 'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¯ÃƒËœÃ‚Âª (ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬Â¡)',
+                    labelText: 'مدت (دقیقه)',
                     filled: true,
                     fillColor: AppColors.input,
                   ),
@@ -290,36 +274,10 @@ class _TimerScreenState extends State<TimerScreen> {
                 TextField(
                   controller: noteCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ÃƒËœÃ‚Â´ÃƒËœÃ‚Âª',
+                    labelText: 'یادداشت',
                     filled: true,
                     fillColor: AppColors.input,
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.calendar_today, size: 16),
-                        label: Text(toJalaliDate(startDate), style: const TextStyle(fontSize: 12)),
-                        onPressed: () async {
-                          final d = await pickDate(ctx, startDate);
-                          if (d != null) setDlgState(() => startDate = d);
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.calendar_today, size: 16),
-                        label: Text(toJalaliDate(endDate), style: const TextStyle(fontSize: 12)),
-                        onPressed: () async {
-                          final d = await pickDate(ctx, endDate);
-                          if (d != null) setDlgState(() => endDate = d);
-                        },
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -327,11 +285,11 @@ class _TimerScreenState extends State<TimerScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂºÃƒâ„¢Ã‹â€ ', style: TextStyle(color: Colors.white70)),
+              child: const Text('لغو', style: TextStyle(color: Colors.white70)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('ÃƒËœÃ‚Â°ÃƒËœÃ‚Â®Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬Â¡', style: TextStyle(color: AppColors.primary)),
+              child: const Text('ذخیره', style: TextStyle(color: AppColors.primary)),
             ),
           ],
         ),
@@ -351,17 +309,16 @@ class _TimerScreenState extends State<TimerScreen> {
         await widget.onChanged();
         if (!mounted) return;
         setState(() {});
-        showSnack(context, 'Ãƒâ„¢Ã‹â€ Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â´ ÃƒËœÃ‚Â´ÃƒËœÃ‚Â¯', color: AppColors.primary);
+        showSnack(context, 'ویرایش شد', color: AppColors.primary);
       }
     }
   }
 
-  // ============ ÃƒËœÃ‚Â­ÃƒËœÃ‚Â°Ãƒâ„¢Ã‚Â Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯Ãƒâ€ºÃ…â€™ ============
   Future<void> _deleteEntry(TimeEntry entry) async {
     final ok = await confirmDialog(
       context,
-      title: 'ÃƒËœÃ‚Â­ÃƒËœÃ‚Â°Ãƒâ„¢Ã‚Â Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯Ãƒâ€ºÃ…â€™',
-      message: 'ÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Â  Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯Ãƒâ€ºÃ…â€™ ÃƒËœÃ‚Â­ÃƒËœÃ‚Â°Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â´Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯ÃƒËœÃ…Â¸',
+      title: 'حذف ورودی',
+      message: 'این ورودی حذف شود؟',
     );
     if (!ok) return;
     widget.entries.removeWhere((e) => e.id == entry.id);
@@ -370,41 +327,20 @@ class _TimerScreenState extends State<TimerScreen> {
     setState(() {});
   }
 
-  // ============ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨ ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â® ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â±ÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™ ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒâ€ºÃ…â€™ ============
-  Future<void> _pickManualDate() async {
-    final d = await pickDate(context, _manualDate);
-    if (d == null) return;
-    if (!mounted) return;
-    final t = await pickTime(context, TimeOfDay.fromDateTime(_manualDate));
-    if (!mounted) return;
-    setState(() {
-      _manualDate = DateTime(
-        d.year,
-        d.month,
-        d.day,
-        t?.hour ?? _manualDate.hour,
-        t?.minute ?? _manualDate.minute,
-      );
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final sorted = [...widget.entries]..sort((a, b) => b.id.compareTo(a.id));
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ===== ÃƒÅ¡Ã‚Â©ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±ÃƒËœÃ‚Âª ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â± =====
           AppCard(
             child: Column(
               children: [
-                // ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂªÃƒËœÃ‚Â®ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨ ÃƒËœÃ‚Â­Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â²Ãƒâ„¢Ã¢â‚¬Â¡
                 Row(
                   children: [
-                    const Text('ÃƒËœÃ‚Â­Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â²Ãƒâ„¢Ã¢â‚¬Â¡:', style: TextStyle(fontSize: 16)),
+                    const Text('حوزه:', style: TextStyle(fontSize: 16)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButton<String>(
@@ -414,9 +350,7 @@ class _TimerScreenState extends State<TimerScreen> {
                         items: widget.domains
                             .map((d) => DropdownMenuItem(value: d.name, child: Text(d.name)))
                             .toList(),
-                        onChanged: _isRunning
-                            ? null
-                            : (v) => setState(() => _selectedDomain = v),
+                        onChanged: _isRunning ? null : (v) => setState(() => _selectedDomain = v),
                       ),
                     ),
                   ],
@@ -424,7 +358,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 const SizedBox(height: 8),
                 AppTextField(
                   controller: _noteCtrl,
-                  label: 'Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§ÃƒËœÃ‚Â´ÃƒËœÃ‚Âª',
+                  label: 'یادداشت',
                   icon: Icons.edit_note,
                 ),
                 const SizedBox(height: 8),
@@ -432,7 +366,7 @@ class _TimerScreenState extends State<TimerScreen> {
                   children: [
                     const Icon(Icons.alarm, color: AppColors.warning),
                     const SizedBox(width: 8),
-                    const Text('Ø¢Ù„Ø§Ø±Ù… (Ø¯Ù‚ÛŒÙ‚Ù‡):', style: TextStyle(fontSize: 14)),
+                    const Text('آلارم (دقیقه):', style: TextStyle(fontSize: 14)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
@@ -440,7 +374,7 @@ class _TimerScreenState extends State<TimerScreen> {
                         keyboardType: TextInputType.number,
                         enabled: !_isRunning,
                         decoration: const InputDecoration(
-                          hintText: 'Ù…Ø«Ù„Ø§Ù‹ Û²Ûµ',
+                          hintText: 'مثلاً ۲۵',
                           filled: true,
                           fillColor: AppColors.input,
                           contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -450,8 +384,6 @@ class _TimerScreenState extends State<TimerScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-
-                // ÃƒËœÃ‚ÂªÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â± ÃƒËœÃ‚Â¨ÃƒËœÃ‚Â²ÃƒËœÃ‚Â±ÃƒÅ¡Ã‚Â¯
                 Text(
                   _elapsedText(),
                   style: const TextStyle(
@@ -462,13 +394,11 @@ class _TimerScreenState extends State<TimerScreen> {
                   ),
                 ),
                 if (_isPaused)
-                  const Text('ÃƒÂ¢Ã‚ÂÃ‚Â¸ Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚ÂªÃƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â´ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¡', style: TextStyle(color: AppColors.warning, fontSize: 14)),
+                  const Text('⏸ متوقف شده', style: TextStyle(color: AppColors.warning, fontSize: 14)),
                 const SizedBox(height: 12),
-
-                // ÃƒËœÃ‚Â¯ÃƒÅ¡Ã‚Â©Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â¡ÃƒÂ¢Ã¢â€šÂ¬Ã…â€™Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§
                 if (!_isRunning) ...[
                   PrimaryButton(
-                    label: 'ÃƒËœÃ‚Â´ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¹',
+                    label: 'شروع',
                     icon: Icons.play_arrow,
                     color: const Color(0xFF009664),
                     onPressed: _start,
@@ -478,7 +408,7 @@ class _TimerScreenState extends State<TimerScreen> {
                     children: [
                       Expanded(
                         child: PrimaryButton(
-                          label: _isPaused ? 'ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â¡' : 'ÃƒËœÃ‚ÂªÃƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã‚Â Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¡ÃƒËœÃ‚Âª',
+                          label: _isPaused ? 'ادامه' : 'توقف موقت',
                           icon: _isPaused ? Icons.play_arrow : Icons.pause,
                           color: _isPaused ? AppColors.primary : AppColors.warning,
                           onPressed: _isPaused ? _resume : _pause,
@@ -487,7 +417,7 @@ class _TimerScreenState extends State<TimerScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: PrimaryButton(
-                          label: 'Ãƒâ„¢Ã‚Â¾ÃƒËœÃ‚Â§Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â  Ãƒâ„¢Ã‹â€  ÃƒËœÃ‚Â°ÃƒËœÃ‚Â®Ãƒâ€ºÃ…â€™ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬Â¡',
+                          label: 'پایان و ذخیره',
                           icon: Icons.stop,
                           color: AppColors.danger,
                           onPressed: _stop,
@@ -499,37 +429,22 @@ class _TimerScreenState extends State<TimerScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // ===== ÃƒÅ¡Ã‚Â©ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±ÃƒËœÃ‚Âª ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒâ€ºÃ…â€™ =====
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('ÃƒÂ¢Ã…â€œÃ‚ÂÃƒÂ¯Ã‚Â¸Ã‚Â ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒâ€ºÃ…â€™', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text('✍️ ثبت دستی', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 AppTextField(
                   controller: _manualMinCtrl,
-                  label: 'Ãƒâ„¢Ã¢â‚¬Â¦ÃƒËœÃ‚Â¯ÃƒËœÃ‚Âª (ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬Â¡)',
+                  label: 'مدت (دقیقه)',
                   keyboardType: TextInputType.number,
                   icon: Icons.timer,
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.calendar_today, size: 16),
-                        label: Text(toJalaliDateTime(_manualDate), style: const TextStyle(fontSize: 12)),
-                        onPressed: _pickManualDate,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
                 PrimaryButton(
-                  label: 'ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª ÃƒËœÃ‚Â¯ÃƒËœÃ‚Â³ÃƒËœÃ‚ÂªÃƒâ€ºÃ…â€™',
+                  label: 'ثبت دستی',
                   icon: Icons.add,
                   color: AppColors.secondary,
                   onPressed: _manualAdd,
@@ -537,10 +452,7 @@ class _TimerScreenState extends State<TimerScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // ===== ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾ Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯Ãƒâ€ºÃ…â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€™Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§ =====
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -548,15 +460,15 @@ class _TimerScreenState extends State<TimerScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯Ãƒâ€ºÃ…â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…â€™Ãƒâ„¢Ã¢â‚¬Â¡ÃƒËœÃ‚Â§', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('${sorted.length} Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¯', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    const Text('📋 ورودی‌ها', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('${sorted.length} مورد', style: const TextStyle(color: Colors.white54, fontSize: 12)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 if (sorted.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(20),
-                    child: Center(child: Text('Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â² Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â±Ãƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯Ãƒâ€ºÃ…â€™ ÃƒËœÃ‚Â«ÃƒËœÃ‚Â¨ÃƒËœÃ‚Âª Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚Â´ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¡', style: TextStyle(color: Colors.white54))),
+                    child: Center(child: Text('هنوز ورودی ثبت نشده', style: TextStyle(color: Colors.white54))),
                   )
                 else
                   ...sorted.map((e) => _entryTile(e)),
@@ -584,7 +496,7 @@ class _TimerScreenState extends State<TimerScreen> {
           Row(
             children: [
               Expanded(
-                child: Text('${e.domain} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ${e.minutes} ÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ€ºÃ…â€™Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬Â¡',
+                child: Text('${e.domain} — ${e.minutes} دقیقه',
                     style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
               IconButton(
@@ -604,13 +516,13 @@ class _TimerScreenState extends State<TimerScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${toJalaliDateTime(start)} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${timeOnly(end)}',
+            '${toJalaliDateTime(start)} → ${timeOnly(end)}',
             style: const TextStyle(color: Colors.white70, fontSize: 12),
           ),
           if (e.note.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â ${e.note}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
+              child: Text('📝 ${e.note}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
             ),
         ],
       ),

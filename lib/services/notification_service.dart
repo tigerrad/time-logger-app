@@ -5,7 +5,8 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -16,15 +17,12 @@ class NotificationService {
       iOS: iosSettings,
     );
     await _plugin.initialize(settings);
-
-    // درخواست پرمیشن اندروید ۱۳+
     await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
   }
 
-  /// نمایش نوتیفیکیشن فوری
   static Future<void> show({
     required int id,
     required String title,
@@ -49,19 +47,6 @@ class NotificationService {
       iOS: iosDetails,
     );
     await _plugin.show(id, title, body, details);
-  }
-
-  /// آلارم تایمر پس از X ثانیه
-  static Future<void> scheduleTimerAlarm({
-    required int seconds,
-    required String label,
-  }) async {
-    await Future.delayed(Duration(seconds: seconds));
-    await show(
-      id: 100,
-      title: '⏰ زمان تمام شد!',
-      body: label,
-    );
   }
 
   static Future<void> cancelAll() async {

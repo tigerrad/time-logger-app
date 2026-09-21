@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/saving.dart';
 import '../widgets/common.dart';
 
@@ -215,9 +215,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(s.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              ),
+              Expanded(child: Text(s.title, style: const TextStyle(fontWeight: FontWeight.bold))),
               IconButton(
                 icon: const Icon(Icons.add_circle, color: AppColors.primary, size: 20),
                 onPressed: () => _addAmount(s),

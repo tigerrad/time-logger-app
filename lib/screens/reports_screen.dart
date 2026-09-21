@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/time_entry.dart';
 import '../services/jalali.dart';
 import '../widgets/common.dart';
@@ -25,8 +25,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
           return dt.year == now.year && dt.month == now.month && dt.day == now.day;
         case 'این هفته':
           final start = now.subtract(Duration(days: now.weekday - 1));
-          final startOfDay = DateTime(start.year, start.month, start.day);
-          return dt.isAfter(startOfDay) || dt.isAtSameMomentAs(startOfDay);
+          final s = DateTime(start.year, start.month, start.day);
+          return dt.isAfter(s) || dt.isAtSameMomentAs(s);
         case 'این ماه':
           return dt.year == now.year && dt.month == now.month;
         case 'امسال':

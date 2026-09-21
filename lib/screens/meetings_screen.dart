@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/meeting.dart';
 import '../services/jalali.dart';
@@ -24,6 +24,17 @@ class _MeetingsScreenState extends State<MeetingsScreen> {
   final _durCtrl = TextEditingController(text: '60');
   DateTime _date = DateTime.now();
   TimeOfDay _time = TimeOfDay.now();
+  final List<int> _selectedWeekdays = [];
+
+  final List<String> _weekdayNames = [
+    'دوشنبه',
+    'سه‌شنبه',
+    'چهارشنبه',
+    'پنج‌شنبه',
+    'جمعه',
+    'شنبه',
+    'یکشنبه',
+  ];
 
   @override
   void dispose() {
@@ -48,22 +59,28 @@ class _MeetingsScreenState extends State<MeetingsScreen> {
       link: _linkCtrl.text,
       time: dt.toIso8601String(),
       duration: int.tryParse(_durCtrl.text) ?? 60,
+      weekdays: List<int>.from(_selectedWeekdays),
     ));
     await widget.onChanged();
     if (!mounted) return;
     setState(() {
       _titleCtrl.clear();
       _linkCtrl.clear();
+      _selectedWeekdays.clear();
     });
     showSnack(context, 'جلسه اضافه شد', color: AppColors.primary);
   }
 
   Future<void> _openLink(String link) async {
+    final uri = Uri.tryParse(link.trim());
+    if (uri == null) {
+      if (!mounted) return;
+      showSnack(context, 'لینک معتبر نیست', color: AppColors.danger);
+      return;
+    }
     try {
-      final uri = Uri.parse(link);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
         if (!mounted) return;
         showSnack(context, 'نمی‌توان لینک را باز کرد', color: AppColors.danger);
       }
@@ -142,6 +159,31 @@ class _MeetingsScreenState extends State<MeetingsScreen> {
                   icon: Icons.timer,
                 ),
                 const SizedBox(height: 8),
+                const Text('روزهای هفته:', style: TextStyle(fontSize: 14)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: List.generate(7, (i) {
+                    final day = i + 1;
+                    final selected = _selectedWeekdays.contains(day);
+                    return FilterChip(
+                      label: Text(_weekdayNames[i], style: const TextStyle(fontSize: 12)),
+                      selected: selected,
+                      onSelected: (v) {
+                        setState(() {
+                          if (v) {
+                            _selectedWeekdays.add(day);
+                          } else {
+                            _selectedWeekdays.remove(day);
+                          }
+                        });
+                      },
+                      selectedColor: AppColors.primary.withOpacity(0.3),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 12),
                 PrimaryButton(
                   label: 'افزودن',
                   icon: Icons.add,
@@ -217,6 +259,14 @@ class _MeetingsScreenState extends State<MeetingsScreen> {
             '${toJalaliDateTime(DateTime.parse(m.time))} — ${m.duration} دقیقه',
             style: const TextStyle(color: Colors.white70, fontSize: 12),
           ),
+          if (m.weekdays.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '🔁 ${m.weekdaysText}',
+                style: const TextStyle(color: AppColors.primary, fontSize: 11),
+              ),
+            ),
           const SizedBox(height: 4),
           Text('🔗 ${m.link}', style: const TextStyle(color: Colors.lightBlueAccent, fontSize: 11)),
         ],

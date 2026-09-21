@@ -1,4 +1,4 @@
-﻿class TimeEntry {
+class TimeEntry {
   final int id;
   final String domain;
   final String start;

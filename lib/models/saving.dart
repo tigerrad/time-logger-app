@@ -1,4 +1,4 @@
-﻿class Saving {
+class Saving {
   final int id;
   String title;
   double target;

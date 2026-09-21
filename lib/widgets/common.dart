@@ -1,6 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
-/// رنگ‌های ثابت برنامه
 class AppColors {
   static const bg = Color(0xFF1C1C20);
   static const surface = Color(0xFF2D2D34);
@@ -12,7 +11,6 @@ class AppColors {
   static const accentPurple = Color(0xFF960096);
 }
 
-/// دکمه اصلی
 class PrimaryButton extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -39,15 +37,12 @@ class PrimaryButton extends StatelessWidget {
         backgroundColor: color,
         foregroundColor: Colors.white,
         minimumSize: Size(0, height),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
 }
 
-/// فیلد متنی استایل‌دار
 class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
@@ -75,16 +70,13 @@ class AppTextField extends StatelessWidget {
         prefixIcon: icon != null ? Icon(icon) : null,
         filled: true,
         fillColor: AppColors.input,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
     );
   }
 }
 
-/// کارت استایل‌دار
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets? padding;
@@ -110,7 +102,6 @@ class AppCard extends StatelessWidget {
   }
 }
 
-/// دیالوگ تایید
 Future<bool> confirmDialog(
   BuildContext context, {
   required String title,
@@ -140,7 +131,6 @@ Future<bool> confirmDialog(
   return result ?? false;
 }
 
-/// اسنک‌بار
 void showSnack(BuildContext context, String message, {Color? color}) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
@@ -151,7 +141,6 @@ void showSnack(BuildContext context, String message, {Color? color}) {
   );
 }
 
-/// انتخاب تاریخ (میلادی) با دیالوگ
 Future<DateTime?> pickDate(BuildContext context, DateTime initial) async {
   return showDatePicker(
     context: context,
@@ -161,10 +150,6 @@ Future<DateTime?> pickDate(BuildContext context, DateTime initial) async {
   );
 }
 
-/// انتخاب زمان
 Future<TimeOfDay?> pickTime(BuildContext context, TimeOfDay initial) async {
-  return showTimePicker(
-    context: context,
-    initialTime: initial,
-  );
+  return showTimePicker(context: context, initialTime: initial);
 }

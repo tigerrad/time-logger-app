@@ -1,12 +1,12 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/domain.dart';
 import '../models/time_entry.dart';
 import '../models/goal.dart';
 import '../models/saving.dart';
 import '../models/meeting.dart';
-import '../models/finance_transaction.dart';
 import '../models/finance_category.dart';
+import '../models/finance_transaction.dart';
 
 class Store {
   static const _kDomains = 'domains';
@@ -14,7 +14,8 @@ class Store {
   static const _kGoals = 'goals';
   static const _kSavings = 'savings';
   static const _kMeetings = 'meetings';
-
+  static const _kFinanceTx = 'finance_transactions';
+  static const _kFinanceCat = 'finance_categories';
   static const _kTimerRunning = 'timer_running';
   static const _kTimerStart = 'timer_start';
   static const _kTimerDomain = 'timer_domain';
@@ -23,11 +24,9 @@ class Store {
   static const _kTimerPausedAt = 'timer_paused_at';
   static const _kTimerTotalPaused = 'timer_total_paused';
 
-  static const _kFinanceTransactions = 'finance_transactions';
-  static const _kFinanceCategories = 'finance_categories';
-
   static Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
+  // ===== DOMAINS =====
   static Future<List<Domain>> loadDomains() async {
     final p = await _prefs;
     final raw = p.getString(_kDomains);
@@ -54,6 +53,7 @@ class Store {
     await p.setString(_kDomains, jsonEncode(d.map((e) => e.toJson()).toList()));
   }
 
+  // ===== ENTRIES =====
   static Future<List<TimeEntry>> loadEntries() async {
     final p = await _prefs;
     final raw = p.getString(_kEntries);
@@ -67,6 +67,7 @@ class Store {
     await p.setString(_kEntries, jsonEncode(e.map((x) => x.toJson()).toList()));
   }
 
+  // ===== GOALS =====
   static Future<List<Goal>> loadGoals() async {
     final p = await _prefs;
     final raw = p.getString(_kGoals);
@@ -80,6 +81,7 @@ class Store {
     await p.setString(_kGoals, jsonEncode(g.map((e) => e.toJson()).toList()));
   }
 
+  // ===== SAVINGS =====
   static Future<List<Saving>> loadSavings() async {
     final p = await _prefs;
     final raw = p.getString(_kSavings);
@@ -93,6 +95,7 @@ class Store {
     await p.setString(_kSavings, jsonEncode(s.map((e) => e.toJson()).toList()));
   }
 
+  // ===== MEETINGS =====
   static Future<List<Meeting>> loadMeetings() async {
     final p = await _prefs;
     final raw = p.getString(_kMeetings);
@@ -106,6 +109,62 @@ class Store {
     await p.setString(_kMeetings, jsonEncode(m.map((e) => e.toJson()).toList()));
   }
 
+  // ===== FINANCE =====
+  static Future<List<FinanceTransaction>> loadFinanceTransactions() async {
+    final p = await _prefs;
+    final raw = p.getString(_kFinanceTx);
+    if (raw == null) return [];
+    final list = jsonDecode(raw) as List;
+    return list.map((e) => FinanceTransaction.fromJson(e)).toList();
+  }
+
+  static Future<void> saveFinanceTransactions(List<FinanceTransaction> t) async {
+    final p = await _prefs;
+    await p.setString(_kFinanceTx, jsonEncode(t.map((e) => e.toJson()).toList()));
+  }
+
+  static Future<List<FinanceCategory>> loadFinanceCategories() async {
+    final p = await _prefs;
+    final raw = p.getString(_kFinanceCat);
+    if (raw == null) {
+      final defaults = [
+        FinanceCategory(id: 1, name: 'حقوق', type: 'income', color: '#4CAF50'),
+        FinanceCategory(id: 2, name: 'فروش', type: 'income', color: '#8BC34A'),
+        FinanceCategory(id: 3, name: 'هدیه دریافتی', type: 'income', color: '#CDDC39'),
+        FinanceCategory(id: 4, name: 'سرمایه‌گذاری', type: 'income', color: '#009688'),
+        FinanceCategory(id: 5, name: 'سایر درآمد', type: 'income', color: '#607D8B'),
+        FinanceCategory(id: 10, name: 'بخشش یا اعانه', type: 'expense', color: '#E91E63'),
+        FinanceCategory(id: 11, name: 'مسکن', type: 'expense', color: '#9C27B0'),
+        FinanceCategory(id: 12, name: 'خوراک', type: 'expense', color: '#FF9800'),
+        FinanceCategory(id: 13, name: 'حمل و نقل', type: 'expense', color: '#2196F3'),
+        FinanceCategory(id: 14, name: 'پوشاک', type: 'expense', color: '#00BCD4'),
+        FinanceCategory(id: 15, name: 'قبض‌ها', type: 'expense', color: '#795548'),
+        FinanceCategory(id: 16, name: 'مراقبت فردی و ورزش', type: 'expense', color: '#FF5722'),
+        FinanceCategory(id: 17, name: 'بهداشت و درمان', type: 'expense', color: '#F44336'),
+        FinanceCategory(id: 18, name: 'هزینه افراد تحت تکفل', type: 'expense', color: '#E91E63'),
+        FinanceCategory(id: 19, name: 'سرگرمی و تفریح', type: 'expense', color: '#FFC107'),
+        FinanceCategory(id: 20, name: 'آموزش', type: 'expense', color: '#3F51B5'),
+        FinanceCategory(id: 21, name: 'تعطیلات و مسافرت', type: 'expense', color: '#03A9F4'),
+        FinanceCategory(id: 22, name: 'کسب و کار شخصی', type: 'expense', color: '#673AB7'),
+        FinanceCategory(id: 23, name: 'هدیه', type: 'expense', color: '#F06292'),
+        FinanceCategory(id: 24, name: 'سرمایه‌گذاری', type: 'expense', color: '#4DB6AC'),
+        FinanceCategory(id: 25, name: 'مالیات و بیمه', type: 'expense', color: '#455A64'),
+        FinanceCategory(id: 26, name: 'پرداخت بدهی', type: 'expense', color: '#8D6E63'),
+        FinanceCategory(id: 27, name: 'سایر', type: 'expense', color: '#9E9E9E'),
+      ];
+      await saveFinanceCategories(defaults);
+      return defaults;
+    }
+    final list = jsonDecode(raw) as List;
+    return list.map((e) => FinanceCategory.fromJson(e)).toList();
+  }
+
+  static Future<void> saveFinanceCategories(List<FinanceCategory> c) async {
+    final p = await _prefs;
+    await p.setString(_kFinanceCat, jsonEncode(c.map((e) => e.toJson()).toList()));
+  }
+
+  // ===== TIMER STATE =====
   static Future<void> saveTimerState({
     required bool running,
     required DateTime? start,
@@ -159,59 +218,5 @@ class Store {
     await p.remove(_kTimerPaused);
     await p.remove(_kTimerPausedAt);
     await p.remove(_kTimerTotalPaused);
-  }
-
-  static Future<List<FinanceTransaction>> loadFinanceTransactions() async {
-    final p = await _prefs;
-    final raw = p.getString(_kFinanceTransactions);
-    if (raw == null) return [];
-    final list = jsonDecode(raw) as List;
-    return list.map((e) => FinanceTransaction.fromJson(e)).toList();
-  }
-
-  static Future<void> saveFinanceTransactions(List<FinanceTransaction> t) async {
-    final p = await _prefs;
-    await p.setString(_kFinanceTransactions, jsonEncode(t.map((e) => e.toJson()).toList()));
-  }
-
-  static Future<List<FinanceCategory>> loadFinanceCategories() async {
-    final p = await _prefs;
-    final raw = p.getString(_kFinanceCategories);
-    if (raw == null) {
-      final defaults = [
-        FinanceCategory(id: 1, name: 'حقوق', type: 'income', color: '#4CAF50'),
-        FinanceCategory(id: 2, name: 'فروش', type: 'income', color: '#8BC34A'),
-        FinanceCategory(id: 3, name: 'هدیه دریافتی', type: 'income', color: '#CDDC39'),
-        FinanceCategory(id: 4, name: 'سرمایه‌گذاری', type: 'income', color: '#009688'),
-        FinanceCategory(id: 5, name: 'سایر درآمد', type: 'income', color: '#607D8B'),
-        FinanceCategory(id: 10, name: 'بخشش یا اعانه', type: 'expense', color: '#E91E63'),
-        FinanceCategory(id: 11, name: 'مسکن', type: 'expense', color: '#9C27B0'),
-        FinanceCategory(id: 12, name: 'خوراک', type: 'expense', color: '#FF9800'),
-        FinanceCategory(id: 13, name: 'حمل و نقل', type: 'expense', color: '#2196F3'),
-        FinanceCategory(id: 14, name: 'پوشاک', type: 'expense', color: '#00BCD4'),
-        FinanceCategory(id: 15, name: 'قبض‌ها', type: 'expense', color: '#795548'),
-        FinanceCategory(id: 16, name: 'مراقبت فردی و ورزش', type: 'expense', color: '#FF5722'),
-        FinanceCategory(id: 17, name: 'بهداشت و درمان', type: 'expense', color: '#F44336'),
-        FinanceCategory(id: 18, name: 'هزینه افراد تحت تکفل', type: 'expense', color: '#E91E63'),
-        FinanceCategory(id: 19, name: 'سرگرمی و تفریح', type: 'expense', color: '#FFC107'),
-        FinanceCategory(id: 20, name: 'آموزش', type: 'expense', color: '#3F51B5'),
-        FinanceCategory(id: 21, name: 'تعطیلات و مسافرت', type: 'expense', color: '#03A9F4'),
-        FinanceCategory(id: 22, name: 'کسب و کار شخصی', type: 'expense', color: '#673AB7'),
-        FinanceCategory(id: 23, name: 'هدیه', type: 'expense', color: '#F06292'),
-        FinanceCategory(id: 24, name: 'سرمایه‌گذاری', type: 'expense', color: '#4DB6AC'),
-        FinanceCategory(id: 25, name: 'مالیات و بیمه', type: 'expense', color: '#455A64'),
-        FinanceCategory(id: 26, name: 'پرداخت بدهی', type: 'expense', color: '#8D6E63'),
-        FinanceCategory(id: 27, name: 'سایر', type: 'expense', color: '#9E9E9E'),
-      ];
-      await saveFinanceCategories(defaults);
-      return defaults;
-    }
-    final list = jsonDecode(raw) as List;
-    return list.map((e) => FinanceCategory.fromJson(e)).toList();
-  }
-
-  static Future<void> saveFinanceCategories(List<FinanceCategory> c) async {
-    final p = await _prefs;
-    await p.setString(_kFinanceCategories, jsonEncode(c.map((e) => e.toJson()).toList()));
   }
 }

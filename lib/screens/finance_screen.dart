@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io';
@@ -27,7 +27,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
   String _period = 'این ماه';
   final _periods = ['امروز', 'این هفته', 'این ماه', 'امسال', 'کل'];
 
-  // فیلدهای فرم
   final _amountCtrl = TextEditingController();
   final _titleCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
@@ -85,11 +84,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
       showSnack(context, 'مبلغ معتبر وارد کنید', color: AppColors.danger);
       return;
     }
-
     final newId = widget.transactions.isEmpty
         ? 1
         : (widget.transactions.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
-
     widget.transactions.add(FinanceTransaction(
       id: newId,
       type: _formType,
@@ -99,7 +96,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
       note: _noteCtrl.text,
       date: _formDate.toIso8601String(),
     ));
-
     await widget.onChanged();
     if (!mounted) return;
     setState(() {
@@ -107,11 +103,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       _titleCtrl.clear();
       _noteCtrl.clear();
     });
-    showSnack(
-      context,
-      'ثبت شد: ${_formType == 'income' ? 'درآمد' : 'هزینه'} ${amount.toStringAsFixed(0)} تومان',
-      color: AppColors.primary,
-    );
+    showSnack(context, 'ثبت شد: $amount تومان', color: AppColors.primary);
   }
 
   Future<void> _delete(FinanceTransaction t) async {
@@ -140,7 +132,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('لغو', style: TextStyle(color: Colors.white70))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('لغو', style: TextStyle(color: Colors.white70)),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, double.tryParse(_budgetCtrl.text)),
             child: const Text('ذخیره', style: TextStyle(color: AppColors.primary)),
@@ -159,85 +154,18 @@ class _FinanceScreenState extends State<FinanceScreen> {
     }
   }
 
-  Future<void> _addCategory() async {
-    final nameCtrl = TextEditingController();
-    final budgetCtrl = TextEditingController();
-    String newType = _formType;
-    final res = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDlg) => AlertDialog(
-          backgroundColor: AppColors.surface,
-          title: const Text('افزودن دسته جدید', style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'نام دسته', filled: true, fillColor: AppColors.input),
-              ),
-              const SizedBox(height: 8),
-              DropdownButton<String>(
-                value: newType,
-                isExpanded: true,
-                dropdownColor: AppColors.input,
-                items: const [
-                  DropdownMenuItem(value: 'income', child: Text('درآمد')),
-                  DropdownMenuItem(value: 'expense', child: Text('هزینه')),
-                ],
-                onChanged: (v) => setDlg(() => newType = v!),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: budgetCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'بودجه ماهانه (اختیاری)', filled: true, fillColor: AppColors.input),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('لغو', style: TextStyle(color: Colors.white70))),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('ذخیره', style: TextStyle(color: AppColors.primary))),
-          ],
-        ),
-      ),
-    );
-    if (res == true && nameCtrl.text.isNotEmpty) {
-      final newId = widget.categories.isEmpty
-          ? 1
-          : (widget.categories.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
-      widget.categories.add(FinanceCategory(
-        id: newId,
-        name: nameCtrl.text,
-        type: newType,
-        color: '#FF9800',
-        monthlyBudget: double.tryParse(budgetCtrl.text) ?? 0,
-      ));
-      await widget.onChanged();
-      if (!mounted) return;
-      setState(() {});
-    }
-  }
-
   Future<void> _exportReport() async {
     final list = _filtered();
     final income = _sumIncome(list);
     final expense = _sumExpense(list);
     final balance = income - expense;
-
     final buf = StringBuffer();
-    buf.writeln('گزارش مالی — ${_period}');
+    buf.writeln('گزارش مالی — $_period');
     buf.writeln('تاریخ: ${toJalaliDateTime(DateTime.now())}');
     buf.writeln('─' * 30);
     buf.writeln('جمع درآمد: ${income.toStringAsFixed(0)} تومان');
     buf.writeln('جمع هزینه: ${expense.toStringAsFixed(0)} تومان');
-    buf.writeln('تراز: ${balance.toStringAsFixed(0)} تومان (${balance >= 0 ? "مثبت" : "منفی"})');
-    buf.writeln('');
-    buf.writeln('تراکنش‌ها:');
-    for (final t in list) {
-      buf.writeln('${t.isIncome ? "➕" : "➖"} ${toJalaliDate(DateTime.parse(t.date))} | ${t.category} | ${t.title} | ${t.amount.toStringAsFixed(0)}');
-    }
-
+    buf.writeln('تراز: ${balance.toStringAsFixed(0)} تومان');
     try {
       final dir = Directory.systemTemp;
       final file = File('${dir.path}/finance_report_${DateTime.now().millisecondsSinceEpoch}.txt');
@@ -249,13 +177,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
     }
   }
 
-  Future<void> _pickFormDate() async {
-    final d = await pickDate(context, _formDate);
-    if (d == null) return;
-    if (!mounted) return;
-    setState(() => _formDate = d);
-  }
-
   @override
   Widget build(BuildContext context) {
     final list = _filtered();
@@ -263,14 +184,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final expense = _sumExpense(list);
     final balance = income - expense;
     final isPositive = balance >= 0;
-
-    // محاسبه هزینه هر دسته
     final byCat = <String, double>{};
     for (final t in list.where((x) => x.isExpense)) {
       byCat[t.category] = (byCat[t.category] ?? 0) + t.amount;
     }
-
-    // بودجه: هزینه این ماه هر دسته
     final now = DateTime.now();
     final thisMonthExpense = <String, double>{};
     for (final t in widget.transactions.where((x) =>
@@ -285,7 +202,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ==== کارت تراز ====
           AppCard(
             child: Column(
               children: [
@@ -323,17 +239,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     children: [
                       Icon(isPositive ? Icons.trending_up : Icons.trending_down, color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFF44336)),
                       const SizedBox(width: 8),
-                      Text('تراز: ', style: const TextStyle(fontSize: 14)),
-                      Text(
-                        '${balance.abs().toStringAsFixed(0)} تومان',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFF44336),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(isPositive ? 'مثبت ✓' : 'منفی ✗', style: TextStyle(color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFF44336))),
+                      Text('تراز: ${balance.abs().toStringAsFixed(0)} تومان', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFF44336))),
                     ],
                   ),
                 ),
@@ -341,56 +247,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // ==== نمودار میله‌ای درآمد/هزینه ====
-          if (income > 0 || expense > 0)
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('📊 درآمد vs هزینه', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 180,
-                    child: BarChart(
-                      BarChartData(
-                        alignment: BarChartAlignment.spaceAround,
-                        maxY: (income > expense ? income : expense) * 1.2,
-                        barTouchData: BarTouchData(enabled: false),
-                        titlesData: FlTitlesData(
-                          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (v, _) {
-                                if (v == 0) return const Text('درآمد', style: TextStyle(fontSize: 11));
-                                if (v == 1) return const Text('هزینه', style: TextStyle(fontSize: 11));
-                                return const Text('');
-                              },
-                            ),
-                          ),
-                        ),
-                        gridData: const FlGridData(show: false),
-                        borderData: FlBorderData(show: false),
-                        barGroups: [
-                          BarChartGroupData(x: 0, barRods: [
-                            BarChartRodData(toY: income, color: const Color(0xFF4CAF50), width: 50, borderRadius: BorderRadius.circular(6)),
-                          ]),
-                          BarChartGroupData(x: 1, barRods: [
-                            BarChartRodData(toY: expense, color: const Color(0xFFF44336), width: 50, borderRadius: BorderRadius.circular(6)),
-                          ]),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 16),
-
-          // ==== نمودار دایره‌ای هزینه‌ها ====
           if (byCat.isNotEmpty)
             AppCard(
               child: Column(
@@ -422,31 +278,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: byCat.entries.map((e) {
-                      final cat = widget.categories.firstWhere(
-                        (c) => c.name == e.key,
-                        orElse: () => FinanceCategory(id: 0, name: e.key, type: 'expense', color: '#888888'),
-                      );
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(width: 10, height: 10, decoration: BoxDecoration(color: _hexToColor(cat.color), shape: BoxShape.circle)),
-                          const SizedBox(width: 4),
-                          Text(e.key, style: const TextStyle(fontSize: 11)),
-                        ],
-                      );
-                    }).toList(),
-                  ),
                 ],
               ),
             ),
           const SizedBox(height: 16),
-
-          // ==== فرم ثبت تراکنش ====
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -481,28 +316,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _formCategory,
-                        decoration: const InputDecoration(
-                          labelText: 'دسته‌بندی',
-                          filled: true,
-                          fillColor: AppColors.input,
-                        ),
-                        dropdownColor: AppColors.input,
-                        items: _catsFor(_formType).map((c) => DropdownMenuItem(value: c.name, child: Text(c.name))).toList(),
-                        onChanged: (v) => setState(() => _formCategory = v),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle, color: AppColors.primary),
-                      onPressed: _addCategory,
-                      tooltip: 'افزودن دسته جدید',
-                    ),
-                  ],
+                DropdownButtonFormField<String>(
+                  value: _formCategory,
+                  decoration: const InputDecoration(
+                    labelText: 'دسته‌بندی',
+                    filled: true,
+                    fillColor: AppColors.input,
+                  ),
+                  dropdownColor: AppColors.input,
+                  items: _catsFor(_formType).map((c) => DropdownMenuItem(value: c.name, child: Text(c.name))).toList(),
+                  onChanged: (v) => setState(() => _formCategory = v),
                 ),
                 const SizedBox(height: 8),
                 AppTextField(controller: _amountCtrl, label: 'مبلغ (تومان)', keyboardType: TextInputType.number, icon: Icons.attach_money),
@@ -510,18 +333,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 AppTextField(controller: _titleCtrl, label: 'عنوان / توضیح کوتاه', icon: Icons.title),
                 const SizedBox(height: 8),
                 AppTextField(controller: _noteCtrl, label: 'یادداشت (اختیاری)', maxLines: 2),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.calendar_today, size: 16),
-                        label: Text(toJalaliDate(_formDate)),
-                        onPressed: _pickFormDate,
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 8),
                 PrimaryButton(
                   label: 'ثبت',
@@ -533,8 +344,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // ==== بودجه ماهانه ====
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -557,9 +366,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                             children: [
                               Expanded(child: Text(c.name, style: const TextStyle(fontSize: 13))),
                               Text(
-                                c.monthlyBudget > 0
-                                    ? '${spent.toStringAsFixed(0)} / ${c.monthlyBudget.toStringAsFixed(0)}'
-                                    : 'بدون بودجه',
+                                c.monthlyBudget > 0 ? '${spent.toStringAsFixed(0)} / ${c.monthlyBudget.toStringAsFixed(0)}' : 'بدون بودجه',
                                 style: TextStyle(fontSize: 11, color: over ? const Color(0xFFF44336) : Colors.white70),
                               ),
                               IconButton(
@@ -575,7 +382,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                             LinearProgressIndicator(
                               value: pct.clamp(0.0, 1.0),
                               backgroundColor: Colors.white12,
-                              color: over ? const Color(0xFFF44336) : (pct > 0.8 ? AppColors.warning : AppColors.primary),
+                              color: over ? const Color(0xFFF44336) : AppColors.primary,
                               minHeight: 6,
                             ),
                           ],
@@ -587,8 +394,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // ==== لیست تراکنش‌ها ====
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -602,7 +407,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     IconButton(
                       icon: const Icon(Icons.share, color: AppColors.secondary, size: 20),
                       onPressed: _exportReport,
-                      tooltip: 'اشتراک‌گذاری گزارش',
                     ),
                   ],
                 ),
@@ -635,10 +439,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
         children: [
           Text(label, style: TextStyle(fontSize: 12, color: color)),
           const SizedBox(height: 4),
-          Text(
-            amount.toStringAsFixed(0),
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
-          ),
+          Text(amount.toStringAsFixed(0), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
           const Text('تومان', style: TextStyle(fontSize: 10, color: Colors.white54)),
         ],
       ),
@@ -674,11 +475,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text('${t.category} • ${toJalaliDate(DateTime.parse(t.date))}', style: const TextStyle(fontSize: 11, color: Colors.white60)),
-                if (t.note.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text('📝 ${t.note}', style: const TextStyle(fontSize: 11, color: Colors.white54)),
-                  ),
               ],
             ),
           ),
