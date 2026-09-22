@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
@@ -13,7 +13,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "ir.kurosh.timelogger"
     compileSdk = 35
-    ndkVersion = "25.1.8937393"
+    ndkVersion = "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
