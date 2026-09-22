@@ -1,19 +1,14 @@
+﻿// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
-import '../models/domain.dart';
+import 'package:provider/provider.dart';
+import '../providers/data_provider.dart';
+import '../providers/language_provider.dart';
+import '../l10n/strings.dart';
 import '../models/goal.dart';
 import '../widgets/common.dart';
 
 class GoalsScreen extends StatefulWidget {
-  final List<Domain> domains;
-  final List<Goal> goals;
-  final Future<void> Function() onChanged;
-
-  const GoalsScreen({
-    super.key,
-    required this.domains,
-    required this.goals,
-    required this.onChanged,
-  });
+  const GoalsScreen({super.key});
 
   @override
   State<GoalsScreen> createState() => _GoalsScreenState();
@@ -21,61 +16,69 @@ class GoalsScreen extends StatefulWidget {
 
 class _GoalsScreenState extends State<GoalsScreen> {
   final _titleCtrl = TextEditingController();
-  String _level = 'روزانه';
+  final _noteCtrl = TextEditingController();
+  String _level = 'daily';
   String? _domain;
-
-  final _levels = [
-    'روزانه',
-    'هفتگی',
-    'ماهانه',
-    'فصلی',
-    'سالانه',
-    'چشم‌انداز ۲ ساله',
-    'چشم‌انداز ۳ ساله',
-    'چشم‌انداز ۴ ساله',
-    'چشم‌انداز ۵ ساله',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.domains.isNotEmpty) _domain = widget.domains.first.name;
-  }
+  DateTime? _deadline;
 
   @override
   void dispose() {
     _titleCtrl.dispose();
+    _noteCtrl.dispose();
     super.dispose();
   }
 
+  String _levelLabel(S s) {
+    switch (_level) {
+      case 'daily': return s.daily;
+      case 'weekly': return s.weekly;
+      case 'monthly': return s.monthly;
+      case 'seasonal': return s.seasonal;
+      case 'yearly': return s.yearly;
+      case 'v2': return s.vision2;
+      case 'v3': return s.vision3;
+      case 'v4': return s.vision4;
+      case 'v5': return s.vision5;
+    }
+    return _level;
+  }
+
+  Color _levelColor() {
+    switch (_level) {
+      case 'daily': return const Color(0xFF4CAF50);
+      case 'weekly': return const Color(0xFF2196F3);
+      case 'monthly': return const Color(0xFFFF9800);
+      case 'seasonal': return const Color(0xFF9C27B0);
+      case 'yearly': return const Color(0xFFE91E63);
+      default: return const Color(0xFF607D8B);
+    }
+  }
+
   Future<void> _add() async {
+    final s = S(context.read<LanguageProvider>().lang);
     if (_titleCtrl.text.isEmpty || _domain == null) {
-      showSnack(context, 'عنوان هدف را وارد کنید', color: AppColors.danger);
+      showSnack(context, s.goalTitle, color: AppColors.danger);
       return;
     }
-    final newId = widget.goals.isEmpty
-        ? 1
-        : (widget.goals.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
-    widget.goals.add(Goal(
+    final data = context.read<DataProvider>();
+    final newId = data.goals.isEmpty ? 1 : (data.goals.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
+    data.goals.add(Goal(
       id: newId,
       title: _titleCtrl.text,
       level: _level,
       domain: _domain!,
       progress: 0,
+      note: _noteCtrl.text,
+      deadline: _deadline?.toIso8601String(),
     ));
-    await widget.onChanged();
+    await data.saveGoals();
     if (!mounted) return;
-    setState(() => _titleCtrl.clear());
-    showSnack(context, 'هدف اضافه شد', color: AppColors.primary);
-  }
-
-  Color _levelColor(String level) {
-    if (level.contains('روزانه')) return const Color(0xFF4CAF50);
-    if (level.contains('هفتگی')) return const Color(0xFF2196F3);
-    if (level.contains('ماهانه')) return const Color(0xFFFF9800);
-    if (level.contains('فصلی')) return const Color(0xFF9C27B0);
-    if (level.contains('سالانه')) return const Color(0xFFE91E63);
-    return const Color(0xFF607D8B);
+    setState(() {
+      _titleCtrl.clear();
+      _noteCtrl.clear();
+      _deadline = null;
+    });
+    showSnack(context, s.saved, color: AppColors.primary);
   }
 
   Future<void> _editProgress(Goal g) async {
@@ -83,44 +86,38 @@ class _GoalsScreenState extends State<GoalsScreen> {
     final res = await showDialog<int>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('درصد پیشرفت', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: ctrl,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(filled: true, fillColor: AppColors.input),
-        ),
+        title: const Text('درصد پیشرفت'),
+        content: TextField(controller: ctrl, keyboardType: TextInputType.number, decoration: const InputDecoration(filled: true)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('لغو', style: TextStyle(color: Colors.white70)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, int.tryParse(ctrl.text)),
-            child: const Text('ذخیره', style: TextStyle(color: AppColors.primary)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('لغو')),
+          TextButton(onPressed: () => Navigator.pop(context, int.tryParse(ctrl.text)), child: const Text('ذخیره')),
         ],
       ),
     );
     if (res != null && res >= 0 && res <= 100) {
       g.progress = res;
-      await widget.onChanged();
       if (!mounted) return;
-      setState(() {});
+      await context.read<DataProvider>().saveGoals();
     }
   }
 
   Future<void> _delete(Goal g) async {
-    final ok = await confirmDialog(context, title: 'حذف هدف', message: '«${g.title}» حذف شود؟');
+    final ok = await confirmDialog(context, title: 'حذف هدف');
     if (!ok) return;
-    widget.goals.removeWhere((x) => x.id == g.id);
-    await widget.onChanged();
-    if (!mounted) return;
-    setState(() {});
+    final data = context.read<DataProvider>();
+    data.goals.removeWhere((x) => x.id == g.id);
+    await data.saveGoals();
   }
 
   @override
   Widget build(BuildContext context) {
+    final data = context.watch<DataProvider>();
+    final s = S(context.watch<LanguageProvider>().lang);
+
+    if (_domain == null && data.domains.isNotEmpty) {
+      _domain = data.domains.first.name;
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -130,18 +127,28 @@ class _GoalsScreenState extends State<GoalsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('🎯 افزودن هدف', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('🎯 ${s.addGoal}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Text('سطح:'),
+                    Text('${s.level}:'),
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButton<String>(
                         value: _level,
                         isExpanded: true,
                         dropdownColor: AppColors.input,
-                        items: _levels.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
+                        items: [
+                          DropdownMenuItem(value: 'daily', child: Text(s.daily)),
+                          DropdownMenuItem(value: 'weekly', child: Text(s.weekly)),
+                          DropdownMenuItem(value: 'monthly', child: Text(s.monthly)),
+                          DropdownMenuItem(value: 'seasonal', child: Text(s.seasonal)),
+                          DropdownMenuItem(value: 'yearly', child: Text(s.yearly)),
+                          DropdownMenuItem(value: 'v2', child: Text(s.vision2)),
+                          DropdownMenuItem(value: 'v3', child: Text(s.vision3)),
+                          DropdownMenuItem(value: 'v4', child: Text(s.vision4)),
+                          DropdownMenuItem(value: 'v5', child: Text(s.vision5)),
+                        ],
                         onChanged: (v) => setState(() => _level = v!),
                       ),
                     ),
@@ -150,23 +157,34 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Text('حوزه:'),
+                    Text('${s.domain}:'),
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButton<String>(
                         value: _domain,
                         isExpanded: true,
                         dropdownColor: AppColors.input,
-                        items: widget.domains.map((d) => DropdownMenuItem(value: d.name, child: Text(d.name))).toList(),
+                        items: data.domains.map((d) => DropdownMenuItem(value: d.name, child: Text(d.name))).toList(),
                         onChanged: (v) => setState(() => _domain = v),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                AppTextField(controller: _titleCtrl, label: 'عنوان هدف', icon: Icons.flag),
+                AppTextField(controller: _titleCtrl, label: s.goalTitle, icon: Icons.flag),
                 const SizedBox(height: 8),
-                PrimaryButton(label: 'افزودن', icon: Icons.add, color: AppColors.secondary, onPressed: _add),
+                AppTextField(controller: _noteCtrl, label: s.goalNote, icon: Icons.note),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.calendar_today, size: 16),
+                  label: Text(_deadline == null ? s.deadline : _deadline.toString().substring(0, 10)),
+                  onPressed: () async {
+                    final d = await pickDate(context, DateTime.now());
+                    if (d != null) setState(() => _deadline = d);
+                  },
+                ),
+                const SizedBox(height: 8),
+                PrimaryButton(label: s.add, icon: Icons.add, color: AppColors.secondary, onPressed: _add),
               ],
             ),
           ),
@@ -175,21 +193,15 @@ class _GoalsScreenState extends State<GoalsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('📋 لیست اهداف', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('${widget.goals.length} مورد', style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                  ],
-                ),
+                Text('📋 ${s.goalList}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                if (widget.goals.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(child: Text('هنوز هدفی ثبت نشده', style: TextStyle(color: Colors.white54))),
+                if (data.goals.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(child: Text(s.noGoals, style: const TextStyle(color: Colors.white54))),
                   )
                 else
-                  ...widget.goals.reversed.map((g) => _goalTile(g)),
+                  ...data.goals.reversed.map((g) => _goalTile(g, s)),
               ],
             ),
           ),
@@ -198,14 +210,14 @@ class _GoalsScreenState extends State<GoalsScreen> {
     );
   }
 
-  Widget _goalTile(Goal g) {
+  Widget _goalTile(Goal g, S s) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.input,
         borderRadius: BorderRadius.circular(8),
-        border: Border(left: BorderSide(color: _levelColor(g.level), width: 4)),
+        border: Border(left: BorderSide(color: _levelColor(), width: 4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,15 +246,20 @@ class _GoalsScreenState extends State<GoalsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: _levelColor(g.level).withOpacity(0.2),
+                  color: _levelColor().withOpacity(0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text(g.level, style: TextStyle(color: _levelColor(g.level), fontSize: 11)),
+                child: Text(_levelLabel(s), style: TextStyle(color: _levelColor(), fontSize: 11)),
               ),
               const SizedBox(width: 8),
-              Text('حوزه: ${g.domain}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
+              Text(g.domain, style: const TextStyle(color: Colors.white60, fontSize: 12)),
             ],
           ),
+          if (g.note.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('📝 ${g.note}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
+            ),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -250,12 +267,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 child: LinearProgressIndicator(
                   value: g.progress / 100,
                   backgroundColor: Colors.white12,
-                  color: AppColors.primary,
+                  color: _levelColor(),
                   minHeight: 6,
                 ),
               ),
               const SizedBox(width: 8),
-              Text('${g.progress}%', style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+              Text('${g.progress}%', style: TextStyle(color: _levelColor(), fontSize: 12, fontWeight: FontWeight.bold)),
             ],
           ),
         ],

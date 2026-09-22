@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class AppColors {
   static const bg = Color(0xFF1C1C20);
@@ -14,7 +14,7 @@ class AppColors {
 class PrimaryButton extends StatelessWidget {
   final String label;
   final IconData icon;
-  final Color? color;
+  final Color color;
   final VoidCallback? onPressed;
   final double height;
 
@@ -22,25 +22,22 @@ class PrimaryButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.icon,
-    this.color,
+    this.color = AppColors.primary,
     required this.onPressed,
     this.height = 50,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return ElevatedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: color ?? theme.colorScheme.primary,
+        backgroundColor: color,
         foregroundColor: Colors.white,
         minimumSize: Size(0, height),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -52,7 +49,6 @@ class AppTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final int? maxLines;
   final IconData? icon;
-  final bool enabled;
 
   const AppTextField({
     super.key,
@@ -61,7 +57,6 @@ class AppTextField extends StatelessWidget {
     this.keyboardType,
     this.maxLines = 1,
     this.icon,
-    this.enabled = true,
   });
 
   @override
@@ -70,15 +65,12 @@ class AppTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      enabled: enabled,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: icon != null ? Icon(icon) : null,
         filled: true,
         fillColor: AppColors.input,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
     );
@@ -100,6 +92,7 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: AppColors.surface,
       margin: margin ?? EdgeInsets.zero,
       child: Padding(
         padding: padding ?? const EdgeInsets.all(12),
@@ -115,24 +108,22 @@ Future<bool> confirmDialog(
   String message = 'آیا مطمئن هستید؟',
   String confirmText = 'بله',
   String cancelText = 'لغو',
-  Color? confirmColor,
+  Color confirmColor = AppColors.danger,
 }) async {
   final result = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(title),
-      content: Text(message),
+      backgroundColor: AppColors.surface,
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      content: Text(message, style: const TextStyle(color: Colors.white70)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: Text(cancelText),
+          child: Text(cancelText, style: const TextStyle(color: Colors.white70)),
         ),
         TextButton(
           onPressed: () => Navigator.pop(ctx, true),
-          child: Text(
-            confirmText,
-            style: TextStyle(color: confirmColor ?? AppColors.danger),
-          ),
+          child: Text(confirmText, style: TextStyle(color: confirmColor)),
         ),
       ],
     ),
@@ -160,8 +151,5 @@ Future<DateTime?> pickDate(BuildContext context, DateTime initial) async {
 }
 
 Future<TimeOfDay?> pickTime(BuildContext context, TimeOfDay initial) async {
-  return showTimePicker(
-    context: context,
-    initialTime: initial,
-  );
+  return showTimePicker(context: context, initialTime: initial);
 }

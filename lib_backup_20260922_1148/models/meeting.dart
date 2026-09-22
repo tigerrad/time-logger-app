@@ -1,11 +1,10 @@
-﻿class Meeting {
+class Meeting {
   final int id;
   String title;
   String link;
   String time;
   int duration;
-  List<int> repeatWeekdays;
-  String? alarmAt;
+  List<int> weekdays;
 
   Meeting({
     required this.id,
@@ -13,9 +12,8 @@
     required this.link,
     required this.time,
     required this.duration,
-    List<int>? repeatWeekdays,
-    this.alarmAt,
-  }) : repeatWeekdays = repeatWeekdays ?? [];
+    this.weekdays = const [],
+  });
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -23,8 +21,7 @@
         'link': link,
         'time': time,
         'duration': duration,
-        'repeatWeekdays': repeatWeekdays,
-        'alarmAt': alarmAt,
+        'weekdays': weekdays,
       };
 
   factory Meeting.fromJson(Map<String, dynamic> j) => Meeting(
@@ -32,8 +29,13 @@
         title: j['title'] ?? '',
         link: j['link'] ?? '',
         time: j['time'] ?? '',
-        duration: j['duration'] ?? 60,
-        repeatWeekdays: (j['repeatWeekdays'] as List? ?? []).cast<int>(),
-        alarmAt: j['alarmAt'],
+        duration: j['duration'] ?? 0,
+        weekdays: (j['weekdays'] as List?)?.map((e) => e as int).toList() ?? [],
       );
+
+  String get weekdaysText {
+    if (weekdays.isEmpty) return 'بدون تکرار';
+    const names = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه', 'یکشنبه'];
+    return weekdays.map((d) => names[d - 1]).join('، ');
+  }
 }

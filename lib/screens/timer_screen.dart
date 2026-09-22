@@ -1,22 +1,18 @@
-﻿import 'dart:async';
+﻿// ignore_for_file: use_build_context_synchronously
+import 'dart:async';
 import 'package:flutter/material.dart';
-import '../models/domain.dart';
+import 'package:provider/provider.dart';
+import '../providers/data_provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
+import '../l10n/strings.dart';
 import '../models/time_entry.dart';
-import '../services/store.dart';
 import '../services/jalali.dart';
+import '../services/store.dart';
 import '../widgets/common.dart';
 
 class TimerScreen extends StatefulWidget {
-  final List<Domain> domains;
-  final List<TimeEntry> entries;
-  final Future<void> Function() onChanged;
-
-  const TimerScreen({
-    super.key,
-    required this.domains,
-    required this.entries,
-    required this.onChanged,
-  });
+  const TimerScreen({super.key});
 
   @override
   State<TimerScreen> createState() => _TimerScreenState();
@@ -30,20 +26,16 @@ class _TimerScreenState extends State<TimerScreen> {
   int _totalPausedSeconds = 0;
   String? _selectedDomain;
   final TextEditingController _noteCtrl = TextEditingController();
+  final TextEditingController _manualMinCtrl = TextEditingController();
+  final TextEditingController _alarmMinCtrl = TextEditingController();
   Timer? _ticker;
   int? _alarmAtSeconds;
   bool _alarmFired = false;
-
-  final TextEditingController _manualMinCtrl = TextEditingController();
-  final TextEditingController _alarmMinCtrl = TextEditingController();
-  final DateTime _manualDate = DateTime.now();
+  DateTime _manualDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    if (widget.domains.isNotEmpty) {
-      _selectedDomain = widget.domains.first.name;
-    }
     _restoreTimerState();
     _startTicker();
   }
@@ -67,7 +59,7 @@ class _TimerScreenState extends State<TimerScreen> {
         _startTime = state['start'] != null ? DateTime.parse(state['start']) : null;
         _pausedAt = state['pausedAt'] != null ? DateTime.parse(state['pausedAt']) : null;
         _totalPausedSeconds = state['totalPausedSeconds'] ?? 0;
-        _selectedDomain = state['domain'] ?? _selectedDomain;
+        _selectedDomain = state['domain'];
         _noteCtrl.text = state['note'] ?? '';
       });
     }
@@ -100,9 +92,9 @@ class _TimerScreenState extends State<TimerScreen> {
     final elapsed = _elapsed().inSeconds;
     if (elapsed >= _alarmAtSeconds!) {
       _alarmFired = true;
-      
       if (mounted) {
-        showSnack(context, 'â° Ø¢Ù„Ø§Ø±Ù…! Ø²Ù…Ø§Ù† ØªÙ…Ø§Ù… Ø´Ø¯', color: AppColors.primary);
+        final s = S(context.read<LanguageProvider>().lang);
+        showSnack(context, s.alarmFired, color: AppColors.primary);
       }
     }
   }
@@ -117,15 +109,12 @@ class _TimerScreenState extends State<TimerScreen> {
   String _elapsedText() {
     if (!_isRunning || _startTime == null) return '00:00:00';
     final d = _elapsed();
-    final h = d.inHours.toString().padLeft(2, '0');
-    final m = (d.inMinutes % 60).toString().padLeft(2, '0');
-    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return '$h:$m:$s';
+    return '${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
   }
 
   Future<void> _start() async {
     if (_selectedDomain == null) {
-      showSnack(context, 'Ø§Ø¨ØªØ¯Ø§ ÛŒÚ© Ø­ÙˆØ²Ù‡ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯', color: AppColors.danger);
+      showSnack(context, S(context.read<LanguageProvider>().lang).selectDomainFirst, color: AppColors.danger);
       return;
     }
     final alarmMin = int.tryParse(_alarmMinCtrl.text);
@@ -163,23 +152,26 @@ class _TimerScreenState extends State<TimerScreen> {
 
   Future<void> _stop() async {
     if (_startTime == null) return;
+    final data = context.read<DataProvider>();
+    final s = S(context.read<LanguageProvider>().lang);
     final now = DateTime.now();
-    final elapsed = _elapsed();
-    final mins = elapsed.inMinutes;
+    final mins = _elapsed().inMinutes;
     final finalMins = mins < 1 ? 1 : mins;
-    final newId = widget.entries.isEmpty
-        ? 1
-        : (widget.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
-    widget.entries.add(TimeEntry(
+    final newId = data.entries.isEmpty ? 1 : (data.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
+
+    data.entries.add(TimeEntry(
       id: newId,
       domain: _selectedDomain!,
       start: _startTime!.toIso8601String(),
       end: now.toIso8601String(),
       minutes: finalMins,
       note: _noteCtrl.text,
+      alarmMinutes: _alarmAtSeconds != null ? _alarmAtSeconds! ~/ 60 : null,
     ));
-    await widget.onChanged();
+
+    await data.saveEntries();
     await Store.clearTimerState();
+
     if (!mounted) return;
     setState(() {
       _isRunning = false;
@@ -192,27 +184,26 @@ class _TimerScreenState extends State<TimerScreen> {
       _alarmAtSeconds = null;
       _alarmFired = false;
     });
-    if (mounted) {
-      showSnack(context, 'Ø«Ø¨Øª Ø´Ø¯: $finalMins Ø¯Ù‚ÛŒÙ‚Ù‡', color: AppColors.primary);
-    }
+    if (mounted) showSnack(context, '${s.registered}: $finalMins ${s.minute}', color: AppColors.primary);
   }
 
   Future<void> _manualAdd() async {
+    final s = S(context.read<LanguageProvider>().lang);
     final m = int.tryParse(_manualMinCtrl.text);
     if (m == null || m < 1) {
-      showSnack(context, 'Ù…Ø¯Øª Ù…Ø¹ØªØ¨Ø± ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯', color: AppColors.danger);
+      showSnack(context, s.durationMin, color: AppColors.danger);
       return;
     }
     if (_selectedDomain == null) {
-      showSnack(context, 'Ø§Ø¨ØªØ¯Ø§ Ø­ÙˆØ²Ù‡ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯', color: AppColors.danger);
+      showSnack(context, s.selectDomainFirst, color: AppColors.danger);
       return;
     }
+    final data = context.read<DataProvider>();
     final end = _manualDate;
     final start = end.subtract(Duration(minutes: m));
-    final newId = widget.entries.isEmpty
-        ? 1
-        : (widget.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
-    widget.entries.add(TimeEntry(
+    final newId = data.entries.isEmpty ? 1 : (data.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
+
+    data.entries.add(TimeEntry(
       id: newId,
       domain: _selectedDomain!,
       start: start.toIso8601String(),
@@ -220,111 +211,48 @@ class _TimerScreenState extends State<TimerScreen> {
       minutes: m,
       note: _noteCtrl.text,
     ));
-    await widget.onChanged();
+
+    await data.saveEntries();
     if (!mounted) return;
     setState(() {
       _manualMinCtrl.clear();
       _noteCtrl.clear();
     });
-    showSnack(context, 'Ø«Ø¨Øª Ø¯Ø³ØªÛŒ Ø§Ù†Ø¬Ø§Ù… Ø´Ø¯: $m Ø¯Ù‚ÛŒÙ‚Ù‡', color: AppColors.secondary);
-  }
-
-  Future<void> _editEntry(TimeEntry entry) async {
-    final minCtrl = TextEditingController(text: entry.minutes.toString());
-    final noteCtrl = TextEditingController(text: entry.note);
-    String domain = entry.domain;
-    DateTime startDate = DateTime.parse(entry.start);
-    DateTime endDate = DateTime.parse(entry.end);
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDlgState) => AlertDialog(
-          backgroundColor: AppColors.surface,
-          title: const Text('ÙˆÛŒØ±Ø§ÛŒØ´ ÙˆØ±ÙˆØ¯ÛŒ', style: TextStyle(color: Colors.white)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButton<String>(
-                  value: domain,
-                  isExpanded: true,
-                  dropdownColor: AppColors.input,
-                  items: widget.domains
-                      .map((d) => DropdownMenuItem(value: d.name, child: Text(d.name)))
-                      .toList(),
-                  onChanged: (v) => setDlgState(() => domain = v!),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: minCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Ù…Ø¯Øª (Ø¯Ù‚ÛŒÙ‚Ù‡)',
-                    filled: true,
-                    fillColor: AppColors.input,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: noteCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'ÛŒØ§Ø¯Ø¯Ø§Ø´Øª',
-                    filled: true,
-                    fillColor: AppColors.input,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Ù„ØºÙˆ', style: TextStyle(color: Colors.white70)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Ø°Ø®ÛŒØ±Ù‡', style: TextStyle(color: AppColors.primary)),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (result == true) {
-      final idx = widget.entries.indexWhere((e) => e.id == entry.id);
-      if (idx >= 0) {
-        widget.entries[idx] = entry.copyWith(
-          domain: domain,
-          minutes: int.tryParse(minCtrl.text) ?? entry.minutes,
-          note: noteCtrl.text,
-          start: startDate.toIso8601String(),
-          end: endDate.toIso8601String(),
-        );
-        await widget.onChanged();
-        if (!mounted) return;
-        setState(() {});
-        showSnack(context, 'ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯', color: AppColors.primary);
-      }
-    }
+    showSnack(context, '${s.registered}: $m ${s.minute}', color: AppColors.secondary);
   }
 
   Future<void> _deleteEntry(TimeEntry entry) async {
-    final ok = await confirmDialog(
-      context,
-      title: 'Ø­Ø°Ù ÙˆØ±ÙˆØ¯ÛŒ',
-      message: 'Ø§ÛŒÙ† ÙˆØ±ÙˆØ¯ÛŒ Ø­Ø°Ù Ø´ÙˆØ¯ØŸ',
-    );
+    final s = S(context.read<LanguageProvider>().lang);
+    final ok = await confirmDialog(context, title: s.deleteEntry, message: s.areYouSure);
     if (!ok) return;
-    widget.entries.removeWhere((e) => e.id == entry.id);
-    await widget.onChanged();
+    final data = context.read<DataProvider>();
+    data.entries.removeWhere((e) => e.id == entry.id);
+    await data.saveEntries();
+  }
+
+  Future<void> _pickManualDate() async {
+    final d = await pickDate(context, _manualDate);
+    if (d == null) return;
     if (!mounted) return;
-    setState(() {});
+    final t = await pickTime(context, TimeOfDay.fromDateTime(_manualDate));
+    if (!mounted) return;
+    setState(() {
+      _manualDate = DateTime(d.year, d.month, d.day, t?.hour ?? _manualDate.hour, t?.minute ?? _manualDate.minute);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final sorted = [...widget.entries]..sort((a, b) => b.id.compareTo(a.id));
+    final data = context.watch<DataProvider>();
+    final theme = context.watch<ThemeProvider>();
+    final s = S(context.watch<LanguageProvider>().lang);
+
+    if (_selectedDomain == null && data.domains.isNotEmpty) {
+      _selectedDomain = data.domains.first.name;
+    }
+
+    final sorted = [...data.entries]..sort((a, b) => b.id.compareTo(a.id));
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -335,33 +263,27 @@ class _TimerScreenState extends State<TimerScreen> {
               children: [
                 Row(
                   children: [
-                    const Text('Ø­ÙˆØ²Ù‡:', style: TextStyle(fontSize: 16)),
+                    Text('${s.domain}:', style: const TextStyle(fontSize: 16)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButton<String>(
                         value: _selectedDomain,
                         isExpanded: true,
                         dropdownColor: AppColors.input,
-                        items: widget.domains
-                            .map((d) => DropdownMenuItem(value: d.name, child: Text(d.name)))
-                            .toList(),
+                        items: data.domains.map((d) => DropdownMenuItem(value: d.name, child: Text(d.name))).toList(),
                         onChanged: _isRunning ? null : (v) => setState(() => _selectedDomain = v),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                AppTextField(
-                  controller: _noteCtrl,
-                  label: 'ÛŒØ§Ø¯Ø¯Ø§Ø´Øª',
-                  icon: Icons.edit_note,
-                ),
+                AppTextField(controller: _noteCtrl, label: s.note, icon: Icons.edit_note),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     const Icon(Icons.alarm, color: AppColors.warning),
                     const SizedBox(width: 8),
-                    const Text('Ø¢Ù„Ø§Ø±Ù… (Ø¯Ù‚ÛŒÙ‚Ù‡):', style: TextStyle(fontSize: 14)),
+                    Text('${s.alarm}:', style: const TextStyle(fontSize: 14)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
@@ -369,7 +291,7 @@ class _TimerScreenState extends State<TimerScreen> {
                         keyboardType: TextInputType.number,
                         enabled: !_isRunning,
                         decoration: const InputDecoration(
-                          hintText: 'Ù…Ø«Ù„Ø§Ù‹ Û²Ûµ',
+                          hintText: '0',
                           filled: true,
                           fillColor: AppColors.input,
                           contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -381,46 +303,35 @@ class _TimerScreenState extends State<TimerScreen> {
                 const SizedBox(height: 16),
                 Text(
                   _elapsedText(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 56,
                     fontFamily: 'monospace',
-                    color: AppColors.primary,
+                    color: theme.primaryColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 if (_isPaused)
-                  const Text('â¸ Ù…ØªÙˆÙ‚Ù Ø´Ø¯Ù‡', style: TextStyle(color: AppColors.warning, fontSize: 14)),
+                  Text('⏸ ${s.paused}', style: const TextStyle(color: AppColors.warning, fontSize: 14)),
                 const SizedBox(height: 12),
-                if (!_isRunning) ...[
-                  PrimaryButton(
-                    label: 'Ø´Ø±ÙˆØ¹',
-                    icon: Icons.play_arrow,
-                    color: const Color(0xFF009664),
-                    onPressed: _start,
-                  ),
-                ] else ...[
+                if (!_isRunning)
+                  PrimaryButton(label: s.start, icon: Icons.play_arrow, color: const Color(0xFF009664), onPressed: _start)
+                else
                   Row(
                     children: [
                       Expanded(
                         child: PrimaryButton(
-                          label: _isPaused ? 'Ø§Ø¯Ø§Ù…Ù‡' : 'ØªÙˆÙ‚Ù Ù…ÙˆÙ‚Øª',
+                          label: _isPaused ? s.resume : s.pause,
                           icon: _isPaused ? Icons.play_arrow : Icons.pause,
-                          color: _isPaused ? AppColors.primary : AppColors.warning,
+                          color: _isPaused ? theme.primaryColor : AppColors.warning,
                           onPressed: _isPaused ? _resume : _pause,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: PrimaryButton(
-                          label: 'Ù¾Ø§ÛŒØ§Ù† Ùˆ Ø°Ø®ÛŒØ±Ù‡',
-                          icon: Icons.stop,
-                          color: AppColors.danger,
-                          onPressed: _stop,
-                        ),
+                        child: PrimaryButton(label: s.stop, icon: Icons.stop, color: AppColors.danger, onPressed: _stop),
                       ),
                     ],
                   ),
-                ],
               ],
             ),
           ),
@@ -429,21 +340,23 @@ class _TimerScreenState extends State<TimerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('âœï¸ Ø«Ø¨Øª Ø¯Ø³ØªÛŒ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('✍️ ${s.manualAdd}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
-                AppTextField(
-                  controller: _manualMinCtrl,
-                  label: 'Ù…Ø¯Øª (Ø¯Ù‚ÛŒÙ‚Ù‡)',
-                  keyboardType: TextInputType.number,
-                  icon: Icons.timer,
+                AppTextField(controller: _manualMinCtrl, label: s.durationMin, keyboardType: TextInputType.number, icon: Icons.timer),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.calendar_today, size: 16),
+                        label: Text(toJalaliDateTime(_manualDate), style: const TextStyle(fontSize: 12)),
+                        onPressed: _pickManualDate,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
-                PrimaryButton(
-                  label: 'Ø«Ø¨Øª Ø¯Ø³ØªÛŒ',
-                  icon: Icons.add,
-                  color: AppColors.secondary,
-                  onPressed: _manualAdd,
-                ),
+                PrimaryButton(label: s.manualAdd, icon: Icons.add, color: AppColors.secondary, onPressed: _manualAdd),
               ],
             ),
           ),
@@ -455,18 +368,18 @@ class _TimerScreenState extends State<TimerScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('ðŸ“‹ ÙˆØ±ÙˆØ¯ÛŒâ€ŒÙ‡Ø§', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('${sorted.length} Ù…ÙˆØ±Ø¯', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    Text('📋 ${s.entries}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('${sorted.length}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 if (sorted.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(child: Text('Ù‡Ù†ÙˆØ² ÙˆØ±ÙˆØ¯ÛŒ Ø«Ø¨Øª Ù†Ø´Ø¯Ù‡', style: TextStyle(color: Colors.white54))),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(child: Text(s.noEntries, style: const TextStyle(color: Colors.white54))),
                   )
                 else
-                  ...sorted.map((e) => _entryTile(e)),
+                  ...sorted.map((e) => _entryTile(context, e, s)),
               ],
             ),
           ),
@@ -475,7 +388,7 @@ class _TimerScreenState extends State<TimerScreen> {
     );
   }
 
-  Widget _entryTile(TimeEntry e) {
+  Widget _entryTile(BuildContext context, TimeEntry e, S s) {
     final start = DateTime.parse(e.start);
     final end = DateTime.parse(e.end);
     return Container(
@@ -490,17 +403,7 @@ class _TimerScreenState extends State<TimerScreen> {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text('${e.domain} â€” ${e.minutes} Ø¯Ù‚ÛŒÙ‚Ù‡',
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit, color: AppColors.warning, size: 20),
-                onPressed: () => _editEntry(e),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              const SizedBox(width: 8),
+              Expanded(child: Text('${e.domain} — ${e.minutes} ${s.minute}', style: const TextStyle(fontWeight: FontWeight.bold))),
               IconButton(
                 icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
                 onPressed: () => _deleteEntry(e),
@@ -510,14 +413,11 @@ class _TimerScreenState extends State<TimerScreen> {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            '${toJalaliDateTime(start)} â†’ ${timeOnly(end)}',
-            style: const TextStyle(color: Colors.white70, fontSize: 12),
-          ),
+          Text('${toJalaliDateTime(start)} → ${timeOnly(end)}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
           if (e.note.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('ðŸ“ ${e.note}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
+              child: Text('📝 ${e.note}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
             ),
         ],
       ),

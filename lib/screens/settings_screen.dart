@@ -1,141 +1,207 @@
 ﻿import 'package:flutter/material.dart';
-import '../services/theme_service.dart';
-import '../services/language_service.dart';
-import '../services/locale_strings.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
+import '../l10n/strings.dart';
+import '../widgets/common.dart';
 
 class SettingsScreen extends StatelessWidget {
-  final ThemeService themeService;
-  final LanguageService languageService;
-
-  const SettingsScreen({
-    super.key,
-    required this.themeService,
-    required this.languageService,
-  });
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final l = L(languageService.lang);
+    final theme = context.watch<ThemeProvider>();
+    final lang = context.watch<LanguageProvider>();
+    final s = S(lang.lang);
 
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l.settingsTheme, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ChoiceChip(
-                        label: Text(l.settingsDark),
-                        selected: themeService.isDark,
-                        onSelected: (_) => themeService.setMode(AppThemeMode.dark),
-                      ),
+        // ==== تم ====
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.brightness_6, color: theme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(s.settingsTheme, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: Text(s.settingsDark),
+                      selected: theme.isDark,
+                      onSelected: (_) => theme.setMode(AppThemeMode.dark),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ChoiceChip(
-                        label: Text(l.settingsLight),
-                        selected: !themeService.isDark,
-                        onSelected: (_) => themeService.setMode(AppThemeMode.light),
-                      ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: Text(s.settingsLight),
+                      selected: !theme.isDark,
+                      onSelected: (_) => theme.setMode(AppThemeMode.light),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('رنگ اصلی', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(child: _colorBox(AppColorScheme.blue, const Color(0xFF2196F3), l.settingsColorBlue)),
-                    const SizedBox(width: 8),
-                    Expanded(child: _colorBox(AppColorScheme.green, const Color(0xFF00DCA0), l.settingsColorGreen)),
-                    const SizedBox(width: 8),
-                    Expanded(child: _colorBox(AppColorScheme.purple, const Color(0xFF9C27B0), l.settingsColorPurple)),
-                  ],
-                ),
-              ],
-            ),
+
+        // ==== رنگ اصلی ====
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.palette, color: theme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(s.settingsColor, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(child: _colorBox(context, theme, AppColorScheme.blue, const Color(0xFF2196F3), s.settingsColorBlue)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _colorBox(context, theme, AppColorScheme.green, const Color(0xFF00DCA0), s.settingsColorGreen)),
+                  const SizedBox(width: 8),
+                  Expanded(child: _colorBox(context, theme, AppColorScheme.purple, const Color(0xFF9C27B0), s.settingsColorPurple)),
+                ],
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l.settingsLanguage, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                RadioListTile<AppLanguage>(
-                  title: Text(l.settingsFarsi),
-                  value: AppLanguage.fa,
-                  groupValue: languageService.lang,
-                  onChanged: (v) => languageService.setLanguage(v!),
-                ),
-                RadioListTile<AppLanguage>(
-                  title: Text(l.settingsEnglish),
-                  value: AppLanguage.en,
-                  groupValue: languageService.lang,
-                  onChanged: (v) => languageService.setLanguage(v!),
-                ),
-                RadioListTile<AppLanguage>(
-                  title: Text(l.settingsArabic),
-                  value: AppLanguage.ar,
-                  groupValue: languageService.lang,
-                  onChanged: (v) => languageService.setLanguage(v!),
-                ),
-              ],
-            ),
+
+        // ==== زبان ====
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.language, color: theme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(s.settingsLanguage, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              RadioListTile<AppLanguage>(
+                title: Text(s.settingsFarsi),
+                value: AppLanguage.fa,
+                groupValue: lang.lang,
+                onChanged: (v) => lang.setLanguage(v!),
+                contentPadding: EdgeInsets.zero,
+              ),
+              RadioListTile<AppLanguage>(
+                title: Text(s.settingsEnglish),
+                value: AppLanguage.en,
+                groupValue: lang.lang,
+                onChanged: (v) => lang.setLanguage(v!),
+                contentPadding: EdgeInsets.zero,
+              ),
+              RadioListTile<AppLanguage>(
+                title: Text(s.settingsArabic),
+                value: AppLanguage.ar,
+                groupValue: lang.lang,
+                onChanged: (v) => lang.setLanguage(v!),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l.settingsAbout, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text('تایم لاگر نسخه ۲.۰.۰', style: TextStyle(fontSize: 13)),
-                const Text('سازنده: کورش شیراز', style: TextStyle(fontSize: 13)),
-              ],
-            ),
+
+        // ==== امنیت ====
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.lock, color: theme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(s.settingsSecurity, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                title: Text(s.settingsPinLock),
+                value: false,
+                onChanged: (v) => showSnack(context, s.comingSoon),
+                contentPadding: EdgeInsets.zero,
+              ),
+              SwitchListTile(
+                title: Text(s.settingsFingerprint),
+                value: false,
+                onChanged: (v) => showSnack(context, s.comingSoon),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // ==== درباره ====
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info_outline, color: theme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(s.settingsAbout, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(s.appTitle),
+              const SizedBox(height: 4),
+              Text('${s.settingsVersion} 3.0.0', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 12),
+              PrimaryButton(
+                label: s.settingsCheckUpdate,
+                icon: Icons.refresh,
+                color: theme.secondaryColor,
+                onPressed: () => showSnack(context, s.settingsUpToDate),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _colorBox(AppColorScheme scheme, Color color, String label) {
-    final selected = themeService.color == scheme;
+  Widget _colorBox(
+    BuildContext context,
+    ThemeProvider theme,
+    AppColorScheme scheme,
+    Color color,
+    String label,
+  ) {
+    final selected = theme.color == scheme;
     return GestureDetector(
-      onTap: () => themeService.setColor(scheme),
+      onTap: () => theme.setColor(scheme),
       child: Container(
-        height: 50,
+        height: 55,
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(8),
           border: selected ? Border.all(color: Colors.white, width: 3) : null,
         ),
         child: Center(
-          child: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

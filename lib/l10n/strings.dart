@@ -1,0 +1,182 @@
+﻿import 'package:flutter/material.dart';
+
+enum AppLanguage { fa, en, ar }
+
+class S {
+  final AppLanguage lang;
+  const S(this.lang);
+
+  static S of(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    if (lang == 'en') return const S(AppLanguage.en);
+    if (lang == 'ar') return const S(AppLanguage.ar);
+    return const S(AppLanguage.fa);
+  }
+
+  String _t(String fa, String en, String ar) {
+    switch (lang) {
+      case AppLanguage.fa:
+        return fa;
+      case AppLanguage.en:
+        return en;
+      case AppLanguage.ar:
+        return ar;
+    }
+  }
+
+  String get appTitle => _t('تایم لاگر — کورش شیراز', 'Time Logger — by Kurosh Shiraz', 'مسجل الوقت — کوروش شیراز');
+  String get tabTimer => _t('تایم', 'Time', 'الوقت');
+  String get tabGoals => _t('اهداف', 'Goals', 'الأهداف');
+  String get tabSavings => _t('پس‌انداز', 'Savings', 'المدخرات');
+  String get tabFinance => _t('مالی', 'Finance', 'المالية');
+  String get tabPublications => _t('نشریات', 'Publications', 'المنشورات');
+  String get tabMeetings => _t('جلسات', 'Meetings', 'الاجتماعات');
+  String get tabReports => _t('گزارش', 'Reports', 'التقارير');
+  String get tabSettings => _t('تنظیمات', 'Settings', 'الإعدادات');
+  String get save => _t('ذخیره', 'Save', 'حفظ');
+  String get cancel => _t('لغو', 'Cancel', 'إلغاء');
+  String get delete => _t('حذف', 'Delete', 'حذف');
+  String get edit => _t('ویرایش', 'Edit', 'تعديل');
+  String get add => _t('افزودن', 'Add', 'إضافة');
+  String get ok => _t('تأیید', 'OK', 'حسناً');
+  String get yes => _t('بله', 'Yes', 'نعم');
+  String get no => _t('خیر', 'No', 'لا');
+  String get search => _t('جستجو', 'Search', 'بحث');
+  String get share => _t('اشتراک‌گذاری', 'Share', 'مشاركة');
+  String get close => _t('بستن', 'Close', 'إغلاق');
+  String get confirm => _t('تأیید', 'Confirm', 'تأكيد');
+  String get domain => _t('حوزه', 'Domain', 'المجال');
+  String get note => _t('یادداشت', 'Note', 'ملاحظة');
+  String get start => _t('شروع', 'Start', 'ابدأ');
+  String get stop => _t('توقف و ذخیره', 'Stop & Save', 'إيقاف وحفظ');
+  String get pause => _t('توقف موقت', 'Pause', 'إيقاف مؤقت');
+  String get resume => _t('ادامه', 'Resume', 'استئناف');
+  String get paused => _t('متوقف شده', 'Paused', 'متوقف');
+  String get manualAdd => _t('ثبت دستی', 'Manual Add', 'إضافة يدوية');
+  String get durationMin => _t('مدت (دقیقه)', 'Duration (min)', 'المدة (دقيقة)');
+  String get entries => _t('ورودی‌ها', 'Entries', 'المدخلات');
+  String get noEntries => _t('هنوز ورودی ثبت نشده', 'No entries yet', 'لا توجد مدخلات بعد');
+  String get alarm => _t('آلارم (دقیقه)', 'Alarm (min)', 'المنبه (دقيقة)');
+  String get alarmFired => _t('آلارم! زمان تمام شد', 'Alarm! Time is up', 'المنبه! انتهى الوقت');
+  String get selectDomainFirst => _t('ابتدا یک حوزه انتخاب کنید', 'Select a domain first', 'اختر مجالاً أولاً');
+  String get registered => _t('ثبت شد', 'Registered', 'تم التسجيل');
+  String get edited => _t('ویرایش شد', 'Edited', 'تم التعديل');
+  String get deleteEntry => _t('حذف ورودی', 'Delete Entry', 'حذف المدخل');
+  String get areYouSure => _t('آیا مطمئن هستید؟', 'Are you sure?', 'هل أنت متأكد؟');
+  String get addGoal => _t('افزودن هدف', 'Add Goal', 'إضافة هدف');
+  String get goalTitle => _t('عنوان هدف', 'Goal Title', 'عنوان الهدف');
+  String get level => _t('سطح', 'Level', 'المستوى');
+  String get goalList => _t('لیست اهداف', 'Goals List', 'قائمة الأهداف');
+  String get noGoals => _t('هنوز هدفی ثبت نشده', 'No goals yet', 'لا توجد أهداف بعد');
+  String get progress => _t('پیشرفت', 'Progress', 'التقدم');
+  String get deadline => _t('تاریخ مهلت', 'Deadline', 'الموعد النهائي');
+  String get goalNote => _t('یادداشت هدف', 'Goal Note', 'ملاحظة الهدف');
+  String get daily => _t('روزانه', 'Daily', 'يومي');
+  String get weekly => _t('هفتگی', 'Weekly', 'أسبوعي');
+  String get monthly => _t('ماهانه', 'Monthly', 'شهري');
+  String get seasonal => _t('فصلی', 'Seasonal', 'فصلي');
+  String get yearly => _t('سالانه', 'Yearly', 'سنوي');
+  String get vision2 => _t('چشم‌انداز ۲ ساله', '2-Year Vision', 'رؤية سنتين');
+  String get vision3 => _t('چشم‌انداز ۳ ساله', '3-Year Vision', 'رؤية ٣ سنوات');
+  String get vision4 => _t('چشم‌انداز ۴ ساله', '4-Year Vision', 'رؤية ٤ سنوات');
+  String get vision5 => _t('چشم‌انداز ۵ ساله', '5-Year Vision', 'رؤية ٥ سنوات');
+  String get addSaving => _t('افزودن پس‌انداز', 'Add Saving', 'إضافة مدخرات');
+  String get savingTitle => _t('عنوان', 'Title', 'العنوان');
+  String get targetAmount => _t('مبلغ هدف', 'Target Amount', 'المبلغ المستهدف');
+  String get currentAmount => _t('مبلغ فعلی', 'Current Amount', 'المبلغ الحالي');
+  String get savingsList => _t('لیست پس‌اندازها', 'Savings List', 'قائمة المدخرات');
+  String get noSavings => _t('هنوز پس‌اندازی ثبت نشده', 'No savings yet', 'لا توجد مدخرات بعد');
+  String get addAmount => _t('افزودن مبلغ', 'Add Amount', 'إضافة مبلغ');
+  String get withdraw => _t('برداشت', 'Withdraw', 'سحب');
+  String get balance => _t('موجودی', 'Balance', 'الرصيد');
+  String get income => _t('درآمد', 'Income', 'الدخل');
+  String get expense => _t('هزینه', 'Expense', 'المصروف');
+  String get amount => _t('مبلغ', 'Amount', 'المبلغ');
+  String get category => _t('دسته‌بندی', 'Category', 'الفئة');
+  String get transactionTitle => _t('عنوان / توضیح', 'Title / Description', 'العنوان / الوصف');
+  String get financialBalance => _t('تراز مالی', 'Financial Balance', 'الرصيد المالي');
+  String get positive => _t('مثبت', 'Positive', 'موجب');
+  String get negative => _t('منفی', 'Negative', 'سالب');
+  String get budget => _t('بودجه ماهانه', 'Monthly Budget', 'الميزانية الشهرية');
+  String get noBudget => _t('بدون بودجه', 'No budget', 'لا ميزانية');
+  String get overBudget => _t('فراتر از بودجه!', 'Over budget!', 'تجاوز الميزانية!');
+  String get addCategory => _t('افزودن دسته جدید', 'Add New Category', 'إضافة فئة جديدة');
+  String get categoryName => _t('نام دسته', 'Category Name', 'اسم الفئة');
+  String get exportPdf => _t('خروجی PDF', 'Export PDF', 'تصدير PDF');
+  String get screenshot => _t('اسکرین‌شات', 'Screenshot', 'لقطة شاشة');
+  String get period => _t('بازه', 'Period', 'الفترة');
+  String get today => _t('امروز', 'Today', 'اليوم');
+  String get thisWeek => _t('این هفته', 'This Week', 'هذا الأسبوع');
+  String get thisMonth => _t('این ماه', 'This Month', 'هذا الشهر');
+  String get thisYear => _t('امسال', 'This Year', 'هذه السنة');
+  String get all => _t('کل', 'All', 'الكل');
+  String get transactions => _t('تراکنش‌ها', 'Transactions', 'المعاملات');
+  String get noTransactions => _t('تراکنشی در این بازه نیست', 'No transactions in this period', 'لا توجد معاملات في هذه الفترة');
+  String get totalIncome => _t('جمع درآمد', 'Total Income', 'إجمالي الدخل');
+  String get totalExpense => _t('جمع هزینه', 'Total Expense', 'إجمالي المصروف');
+  String get netBalance => _t('تراز خالص', 'Net Balance', 'الرصيد الصافي');
+  String get toman => _t('تومان', 'Toman', 'تومان');
+  String get reminders => _t('یادآورها', 'Reminders', 'التذكيرات');
+  String get addReminder => _t('افزودن یادآور', 'Add Reminder', 'إضافة تذكير');
+  String get addPublication => _t('افزودن نشریه', 'Add Publication', 'إضافة منشور');
+  String get uploadFile => _t('بارگذاری فایل', 'Upload File', 'تحميل ملف');
+  String get supportedFormats => _t('فرمت‌های پشتیبانی: PDF, TXT, Excel', 'Supported: PDF, TXT, Excel', 'المدعوم: PDF, TXT, Excel');
+  String get publicationsList => _t('لیست نشریات', 'Publications List', 'قائمة المنشورات');
+  String get noPublications => _t('هنوز نشریه‌ای اضافه نشده', 'No publications yet', 'لا توجد منشورات بعد');
+  String get openFile => _t('باز کردن', 'Open', 'فتح');
+  String get searchPublications => _t('جستجو در نشریات', 'Search publications', 'البحث في المنشورات');
+  String get addMeeting => _t('افزودن جلسه', 'Add Meeting', 'إضافة اجتماع');
+  String get meetingTitle => _t('عنوان جلسه', 'Meeting Title', 'عنوان الاجتماع');
+  String get link => _t('لینک', 'Link', 'الرابط');
+  String get date => _t('تاریخ', 'Date', 'التاريخ');
+  String get time => _t('ساعت', 'Time', 'الوقت');
+  String get meetingsList => _t('لیست جلسات', 'Meetings List', 'قائمة الاجتماعات');
+  String get noMeetings => _t('هنوز جلسه‌ای ثبت نشده', 'No meetings yet', 'لا توجد اجتماعات بعد');
+  String get openLink => _t('باز کردن لینک', 'Open Link', 'فتح الرابط');
+  String get addToCalendar => _t('افزودن به تقویم', 'Add to Calendar', 'إضافة إلى التقويم');
+  String get weekdays => _t('روزهای هفته', 'Weekdays', 'أيام الأسبوع');
+  String get hourlyReport => _t('گزارش ساعتی', 'Hourly Report', 'التقرير الساعي');
+  String get percentReport => _t('گزارش درصدی', 'Percent Report', 'التقرير النسبي');
+  String get latestEntries => _t('آخرین ورودی‌ها', 'Latest Entries', 'أحدث المدخلات');
+  String get total => _t('مجموع', 'Total', 'المجموع');
+  String get minute => _t('دقیقه', 'min', 'دقيقة');
+  String get hour => _t('ساعت', 'hour', 'ساعة');
+  String get noData => _t('داده‌ای نیست', 'No data', 'لا توجد بيانات');
+  String get entriesCount => _t('تعداد ورودی', 'Entries count', 'عدد المدخلات');
+  String get exportReport => _t('خروجی گزارش', 'Export Report', 'تصدير التقرير');
+  String get settingsTheme => _t('تم', 'Theme', 'المظهر');
+  String get settingsDark => _t('تیره', 'Dark', 'داكن');
+  String get settingsLight => _t('روشن', 'Light', 'فاتح');
+  String get settingsColor => _t('رنگ اصلی', 'Main Color', 'اللون الرئيسي');
+  String get settingsColorBlue => _t('آبی', 'Blue', 'أزرق');
+  String get settingsColorGreen => _t('سبز', 'Green', 'أخضر');
+  String get settingsColorPurple => _t('بنفش', 'Purple', 'بنفسجي');
+  String get settingsLanguage => _t('زبان', 'Language', 'اللغة');
+  String get settingsFarsi => _t('فارسی', 'Persian', 'الفارسية');
+  String get settingsEnglish => _t('انگلیسی', 'English', 'الإنجليزية');
+  String get settingsArabic => _t('عربی', 'Arabic', 'العربية');
+  String get settingsSecurity => _t('امنیت', 'Security', 'الأمان');
+  String get settingsPinLock => _t('قفل با رمز عددی', 'PIN Lock', 'قفل برقم سري');
+  String get settingsFingerprint => _t('اثر انگشت', 'Fingerprint', 'بصمة الإصبع');
+  String get settingsEnablePin => _t('فعال‌سازی رمز', 'Enable PIN', 'تفعيل الرقم السري');
+  String get settingsDisablePin => _t('غیرفعال‌سازی رمز', 'Disable PIN', 'تعطيل الرقم السري');
+  String get settingsEnterPin => _t('رمز عددی را وارد کنید', 'Enter PIN', 'أدخل الرقم السري');
+  String get settingsWrongPin => _t('رمز اشتباه است', 'Wrong PIN', 'الرقم السري خطأ');
+  String get settingsSetPin => _t('رمز جدید را وارد کنید (۴ رقم)', 'Set new PIN (4 digits)', 'أدخل رقماً سرياً جديداً (٤ أرقام)');
+  String get settingsAbout => _t('درباره', 'About', 'حول');
+  String get settingsVersion => _t('نسخه', 'Version', 'الإصدار');
+  String get settingsCheckUpdate => _t('بررسی بروزرسانی', 'Check for Updates', 'التحقق من التحديثات');
+  String get settingsUpToDate => _t('آخرین نسخه نصب است', 'Up to date', 'محدّث');
+  String get settingsNewVersion => _t('نسخه جدید موجود است', 'New version available', 'إصدار جديد متوفر');
+  String get settingsSupport => _t('حمایت مالی', 'Support Us', 'ادعمنا');
+  String get lockTitle => _t('ورود به برنامه', 'App Lock', 'قفل التطبيق');
+  String get lockSubtitle => _t('برای ورود، احراز هویت کنید', 'Authenticate to enter', 'قم بالمصادقة للدخول');
+  String get useFingerprint => _t('استفاده از اثر انگشت', 'Use Fingerprint', 'استخدم بصمة الإصبع');
+  String get usePin => _t('استفاده از رمز عددی', 'Use PIN', 'استخدم الرقم السري');
+  String get unlock => _t('باز کردن', 'Unlock', 'فتح');
+  String get saved => _t('ذخیره شد', 'Saved', 'تم الحفظ');
+  String get deleted => _t('حذف شد', 'Deleted', 'تم الحذف');
+  String get errorOccurred => _t('خطایی رخ داد', 'An error occurred', 'حدث خطأ');
+  String get permissionDenied => _t('دسترسی رد شد', 'Permission denied', 'تم رفض الإذن');
+  String get comingSoon => _t('به‌زودی', 'Coming soon', 'قريباً');
+}

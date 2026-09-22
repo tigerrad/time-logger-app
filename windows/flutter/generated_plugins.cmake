@@ -3,6 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  local_auth_windows
+  pdfx
+  printing
+  share_plus
   url_launcher_windows
 )
 

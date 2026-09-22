@@ -1,11 +1,10 @@
-﻿class TimeEntry {
+class TimeEntry {
   final int id;
   final String domain;
   final String start;
   final String end;
   final int minutes;
   final String note;
-  final int? alarmMinutes;
 
   TimeEntry({
     required this.id,
@@ -14,7 +13,6 @@
     required this.end,
     required this.minutes,
     required this.note,
-    this.alarmMinutes,
   });
 
   Map<String, dynamic> toJson() => {
@@ -24,7 +22,6 @@
         'end': end,
         'minutes': minutes,
         'note': note,
-        'alarmMinutes': alarmMinutes,
       };
 
   factory TimeEntry.fromJson(Map<String, dynamic> j) => TimeEntry(
@@ -34,7 +31,6 @@
         end: j['end'] ?? '',
         minutes: j['minutes'] ?? 0,
         note: j['note'] ?? '',
-        alarmMinutes: j['alarmMinutes'],
       );
 
   TimeEntry copyWith({
@@ -44,7 +40,6 @@
     String? end,
     int? minutes,
     String? note,
-    int? alarmMinutes,
   }) =>
       TimeEntry(
         id: id ?? this.id,
@@ -53,6 +48,5 @@
         end: end ?? this.end,
         minutes: minutes ?? this.minutes,
         note: note ?? this.note,
-        alarmMinutes: alarmMinutes ?? this.alarmMinutes,
       );
 }
