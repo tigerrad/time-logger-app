@@ -121,7 +121,6 @@ class _TimerScreenState extends State<TimerScreen> {
         id: 100,
         title: 'Time Logger',
         body: 'آلارم! زمان تمام شد',
-        type: _alarmType,
       );
 
       // توقف خودکار تایمر

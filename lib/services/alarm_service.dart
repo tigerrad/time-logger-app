@@ -1,8 +1,8 @@
 ﻿import 'dart:async';
-import 'dart:io';
 import 'package:flutter/services.dart';
-import 'package:permission_handler/permission_handler.dart';
 
+
+enum AlarmType { sound, vibrate, both }
 enum AlarmSoundSource { systemRingtone, customFile }
 
 class AlarmService {
@@ -18,13 +18,6 @@ class AlarmService {
   bool get isPlaying => _isPlaying;
   static const Duration maxPlayDuration = Duration(seconds: 10);
 
-  Future<bool> requestAudioPermission() async {
-    if (!Platform.isAndroid) return true;
-    if (await Permission.audio.isGranted) return true;
-    final result = await Permission.audio.request();
-    return result.isGranted;
-  }
-
   Future<void> playSystemRingtone() async {
     await _stopInternal();
     _isPlaying = true;
@@ -32,7 +25,6 @@ class AlarmService {
     try {
       await _channel.invokeMethod('playAlarm');
     } catch (e) {
-      print('Alarm error: $e');
       _isPlaying = false;
       return;
     }
@@ -41,16 +33,12 @@ class AlarmService {
   }
 
   Future<void> playCustomFile(String filePath) async {
-    final ok = await requestAudioPermission();
-    if (!ok) return;
-
     await _stopInternal();
     _isPlaying = true;
 
     try {
       await _channel.invokeMethod('playCustom', {'path': filePath});
     } catch (e) {
-      print('Custom error: $e');
       _isPlaying = false;
       return;
     }
@@ -61,9 +49,7 @@ class AlarmService {
   void _startAutoStop() {
     _autoStopTimer?.cancel();
     _autoStopTimer = Timer(maxPlayDuration, () {
-      if (_isPlaying) {
-        stop();
-      }
+      if (_isPlaying) stop();
     });
   }
 
