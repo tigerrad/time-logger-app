@@ -4,10 +4,11 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
-import android.os.Build
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
+import java.io.FileInputStream
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "ir.kurosh.timelogger/alarm"
@@ -47,10 +48,8 @@ class MainActivity : FlutterActivity() {
 
     private fun playAlarmSound() {
         stopAlarm()
-
         val alarmUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-
         mediaPlayer = MediaPlayer().apply {
             setDataSource(this@MainActivity, alarmUri)
             setAudioStreamType(AudioManager.STREAM_ALARM)
@@ -64,9 +63,14 @@ class MainActivity : FlutterActivity() {
         if (path == null) return
         stopAlarm()
 
-        val uri = Uri.parse(path)
+        val file = File(path)
+        if (!file.exists()) {
+            throw Exception("File not found: $path")
+        }
+
         mediaPlayer = MediaPlayer().apply {
-            setDataSource(this@MainActivity, uri)
+            val fis = FileInputStream(file)
+            setDataSource(fis.fd)
             setAudioStreamType(AudioManager.STREAM_ALARM)
             isLooping = true
             prepare()
