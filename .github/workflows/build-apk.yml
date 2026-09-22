@@ -42,7 +42,7 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build APK (signed & optimized)
+      - name: Build APK (signed and optimized)
         run: flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/debug-info
 
       - name: Rename APKs
@@ -64,8 +64,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: "ØªØ§ÛŒÙ… Ù„Ø§Ú¯Ø± v1.0.${{ github.run_number }}"
-          body: "Ù†Ø³Ø®Ù‡ Ø¬Ø¯ÛŒØ¯ Ø¨Ø±Ù†Ø§Ù…Ù‡ ØªØ§ÛŒÙ… Ù„Ø§Ú¯Ø± â€” Ø³Ø§Ø²Ù†Ø¯Ù‡: Ú©ÙˆØ±Ø´ Ø´ÛŒØ±Ø§Ø²"
+          name: "Time Logger v1.0.${{ github.run_number }}"
+          body: "New version of Time Logger by Kurosh Shiraz"
           files: build/app/outputs/flutter-apk/timelogger-*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
