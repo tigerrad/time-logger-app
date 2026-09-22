@@ -1,7 +1,6 @@
 ﻿import 'dart:async';
 import 'dart:io';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 enum AlarmSoundSource { systemRingtone, customFile }
@@ -11,7 +10,8 @@ class AlarmService {
   factory AlarmService() => _instance;
   AlarmService._();
 
-  final AudioPlayer _player = AudioPlayer();
+  static const _channel = MethodChannel('ir.kurosh.timelogger/alarm');
+
   Timer? _autoStopTimer;
   bool _isPlaying = false;
 
@@ -26,79 +26,61 @@ class AlarmService {
   }
 
   Future<void> playSystemRingtone() async {
-    // ابتدا stop کن اگر پخش قبلی هست
-    await stop();
-
+    await _stopInternal();
     _isPlaying = true;
 
     try {
-      await FlutterRingtonePlayer().playAlarm(
-        looping: true,
-        volume: 1.0,
-        asAlarm: true,
-      );
-      print('Ringtone started');
+      await _channel.invokeMethod('playAlarm');
     } catch (e) {
-      print('Ringtone error: $e');
+      print('Alarm error: $e');
       _isPlaying = false;
       return;
     }
 
-    // تایمر خودکار بعد از پخش شروع شود
-    _autoStopTimer?.cancel();
-    _autoStopTimer = Timer(maxPlayDuration, () {
-      if (_isPlaying) {
-        stop();
-        print('Auto-stop fired');
-      }
-    });
+    _startAutoStop();
   }
 
   Future<void> playCustomFile(String filePath) async {
     final ok = await requestAudioPermission();
-    if (!ok) {
-      print('Permission denied');
-      return;
-    }
+    if (!ok) return;
 
-    await stop();
+    await _stopInternal();
     _isPlaying = true;
 
     try {
-      await _player.setReleaseMode(ReleaseMode.loop);
-      await _player.setVolume(1.0);
-      await _player.play(DeviceFileSource(filePath));
-      print('Custom file started: $filePath');
+      await _channel.invokeMethod('playCustom', {'path': filePath});
     } catch (e) {
-      print('Custom file error: $e');
+      print('Custom error: $e');
       _isPlaying = false;
       return;
     }
 
+    _startAutoStop();
+  }
+
+  void _startAutoStop() {
     _autoStopTimer?.cancel();
     _autoStopTimer = Timer(maxPlayDuration, () {
       if (_isPlaying) {
         stop();
-        print('Auto-stop fired');
       }
     });
   }
 
-  Future<void> stop() async {
+  Future<void> _stopInternal() async {
     _autoStopTimer?.cancel();
     _autoStopTimer = null;
     _isPlaying = false;
+    try {
+      await _channel.invokeMethod('stop');
+    } catch (_) {}
+  }
 
-    try {
-      await FlutterRingtonePlayer().stop();
-    } catch (_) {}
-    try {
-      await _player.stop();
-    } catch (_) {}
+  Future<void> stop() async {
+    await _stopInternal();
   }
 
   Future<void> dispose() async {
     await stop();
-    await _player.dispose();
   }
 }
