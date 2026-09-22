@@ -20,6 +20,7 @@ dependencies:
   table_calendar: ^3.1.2
   file_picker: ^8.1.2
   audioplayers: ^6.1.0
+  permission_handler: ^11.3.1
   flutter_ringtone_player: ^4.0.0
   excel: ^4.0.3
   pdf: ^3.11.1
