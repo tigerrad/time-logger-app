@@ -1,6 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
+﻿// ignore_for_file: use_build_context_synchronously
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/data_provider.dart';
 import '../providers/theme_provider.dart';
@@ -9,6 +10,7 @@ import '../l10n/strings.dart';
 import '../models/time_entry.dart';
 import '../services/jalali.dart';
 import '../services/store.dart';
+import '../services/notification_service.dart';
 import '../widgets/common.dart';
 
 class TimerScreen extends StatefulWidget {
@@ -31,6 +33,7 @@ class _TimerScreenState extends State<TimerScreen> {
   Timer? _ticker;
   int? _alarmAtSeconds;
   bool _alarmFired = false;
+  AlarmType _alarmType = AlarmType.both;
   DateTime _manualDate = DateTime.now();
 
   @override
@@ -38,6 +41,7 @@ class _TimerScreenState extends State<TimerScreen> {
     super.initState();
     _restoreTimerState();
     _startTicker();
+    NotificationService().init();
   }
 
   @override
@@ -61,6 +65,7 @@ class _TimerScreenState extends State<TimerScreen> {
         _totalPausedSeconds = state['totalPausedSeconds'] ?? 0;
         _selectedDomain = state['domain'];
         _noteCtrl.text = state['note'] ?? '';
+        _alarmAtSeconds = state['alarmAtSeconds'];
       });
     }
   }
@@ -74,6 +79,7 @@ class _TimerScreenState extends State<TimerScreen> {
       paused: _isPaused,
       pausedAt: _pausedAt,
       totalPausedSeconds: _totalPausedSeconds,
+      alarmAtSeconds: _alarmAtSeconds,
     );
   }
 
@@ -87,14 +93,31 @@ class _TimerScreenState extends State<TimerScreen> {
     });
   }
 
-  void _checkAlarm() {
+  Future<void> _checkAlarm() async {
     if (_alarmAtSeconds == null || _alarmFired) return;
     final elapsed = _elapsed().inSeconds;
     if (elapsed >= _alarmAtSeconds!) {
       _alarmFired = true;
+
+      // پخش صدا و ویبره
+      if (_alarmType == AlarmType.sound || _alarmType == AlarmType.both) {
+        SystemSound.play(SystemSoundType.alert);
+      }
+      if (_alarmType == AlarmType.vibrate || _alarmType == AlarmType.both) {
+        HapticFeedback.vibrate();
+      }
+
+      // اعلان سیستمی
+      await NotificationService().showAlarm(
+        id: 100,
+        title: 'Time Logger',
+        body: 'آلارم! زمان تمام شد',
+        type: _alarmType,
+      );
+
+      // توقف خودکار تایمر
       if (mounted) {
-        final s = S(context.read<LanguageProvider>().lang);
-        showSnack(context, s.alarmFired, color: AppColors.primary);
+        await _stop(showMessage: true);
       }
     }
   }
@@ -113,8 +136,9 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   Future<void> _start() async {
+    final s = S(context.read<LanguageProvider>().lang);
     if (_selectedDomain == null) {
-      showSnack(context, S(context.read<LanguageProvider>().lang).selectDomainFirst, color: AppColors.danger);
+      showSnack(context, s.selectDomainFirst, color: AppColors.danger);
       return;
     }
     final alarmMin = int.tryParse(_alarmMinCtrl.text);
@@ -150,14 +174,16 @@ class _TimerScreenState extends State<TimerScreen> {
     await _persistTimerState();
   }
 
-  Future<void> _stop() async {
+  Future<void> _stop({bool showMessage = true}) async {
     if (_startTime == null) return;
     final data = context.read<DataProvider>();
     final s = S(context.read<LanguageProvider>().lang);
     final now = DateTime.now();
     final mins = _elapsed().inMinutes;
     final finalMins = mins < 1 ? 1 : mins;
-    final newId = data.entries.isEmpty ? 1 : (data.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
+    final newId = data.entries.isEmpty
+        ? 1
+        : (data.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
 
     data.entries.add(TimeEntry(
       id: newId,
@@ -184,7 +210,10 @@ class _TimerScreenState extends State<TimerScreen> {
       _alarmAtSeconds = null;
       _alarmFired = false;
     });
-    if (mounted) showSnack(context, '${s.registered}: $finalMins ${s.minute}', color: AppColors.primary);
+    if (mounted && showMessage) {
+      showSnack(context, '${s.registered}: $finalMins ${s.minute}',
+          color: AppColors.primary);
+    }
   }
 
   Future<void> _manualAdd() async {
@@ -201,7 +230,9 @@ class _TimerScreenState extends State<TimerScreen> {
     final data = context.read<DataProvider>();
     final end = _manualDate;
     final start = end.subtract(Duration(minutes: m));
-    final newId = data.entries.isEmpty ? 1 : (data.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
+    final newId = data.entries.isEmpty
+        ? 1
+        : (data.entries.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
 
     data.entries.add(TimeEntry(
       id: newId,
@@ -218,7 +249,8 @@ class _TimerScreenState extends State<TimerScreen> {
       _manualMinCtrl.clear();
       _noteCtrl.clear();
     });
-    showSnack(context, '${s.registered}: $m ${s.minute}', color: AppColors.secondary);
+    showSnack(context, '${s.registered}: $m ${s.minute}',
+        color: AppColors.secondary);
   }
 
   Future<void> _deleteEntry(TimeEntry entry) async {
@@ -237,7 +269,8 @@ class _TimerScreenState extends State<TimerScreen> {
     final t = await pickTime(context, TimeOfDay.fromDateTime(_manualDate));
     if (!mounted) return;
     setState(() {
-      _manualDate = DateTime(d.year, d.month, d.day, t?.hour ?? _manualDate.hour, t?.minute ?? _manualDate.minute);
+      _manualDate = DateTime(d.year, d.month, d.day,
+          t?.hour ?? _manualDate.hour, t?.minute ?? _manualDate.minute);
     });
   }
 
@@ -270,14 +303,20 @@ class _TimerScreenState extends State<TimerScreen> {
                         value: _selectedDomain,
                         isExpanded: true,
                         dropdownColor: AppColors.input,
-                        items: data.domains.map((d) => DropdownMenuItem(value: d.name, child: Text(d.name))).toList(),
-                        onChanged: _isRunning ? null : (v) => setState(() => _selectedDomain = v),
+                        items: data.domains
+                            .map((d) =>
+                                DropdownMenuItem(value: d.name, child: Text(d.name)))
+                            .toList(),
+                        onChanged: _isRunning
+                            ? null
+                            : (v) => setState(() => _selectedDomain = v),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                AppTextField(controller: _noteCtrl, label: s.note, icon: Icons.edit_note),
+                AppTextField(
+                    controller: _noteCtrl, label: s.note, icon: Icons.edit_note),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -294,8 +333,40 @@ class _TimerScreenState extends State<TimerScreen> {
                           hintText: '0',
                           filled: true,
                           fillColor: AppColors.input,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // نوع آلارم
+                Row(
+                  children: [
+                    const Icon(Icons.notifications_active,
+                        color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    const Text('نوع آلارم:',
+                        style: TextStyle(fontSize: 14)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButton<AlarmType>(
+                        value: _alarmType,
+                        isExpanded: true,
+                        dropdownColor: AppColors.input,
+                        items: const [
+                          DropdownMenuItem(
+                              value: AlarmType.sound,
+                              child: Text('زنگ')),
+                          DropdownMenuItem(
+                              value: AlarmType.vibrate,
+                              child: Text('ویبره')),
+                          DropdownMenuItem(
+                              value: AlarmType.both,
+                              child: Text('زنگ + ویبره')),
+                        ],
+                        onChanged: _isRunning ? null : (v) => setState(() => _alarmType = v!),
                       ),
                     ),
                   ],
@@ -311,10 +382,17 @@ class _TimerScreenState extends State<TimerScreen> {
                   ),
                 ),
                 if (_isPaused)
-                  Text('⏸ ${s.paused}', style: const TextStyle(color: AppColors.warning, fontSize: 14)),
+                  Text('⏸ ${s.paused}',
+                      style: const TextStyle(
+                          color: AppColors.warning, fontSize: 14)),
                 const SizedBox(height: 12),
                 if (!_isRunning)
-                  PrimaryButton(label: s.start, icon: Icons.play_arrow, color: const Color(0xFF009664), onPressed: _start)
+                  PrimaryButton(
+                    label: s.start,
+                    icon: Icons.play_arrow,
+                    color: const Color(0xFF009664),
+                    onPressed: _start,
+                  )
                 else
                   Row(
                     children: [
@@ -322,13 +400,20 @@ class _TimerScreenState extends State<TimerScreen> {
                         child: PrimaryButton(
                           label: _isPaused ? s.resume : s.pause,
                           icon: _isPaused ? Icons.play_arrow : Icons.pause,
-                          color: _isPaused ? theme.primaryColor : AppColors.warning,
+                          color: _isPaused
+                              ? theme.primaryColor
+                              : AppColors.warning,
                           onPressed: _isPaused ? _resume : _pause,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: PrimaryButton(label: s.stop, icon: Icons.stop, color: AppColors.danger, onPressed: _stop),
+                        child: PrimaryButton(
+                          label: s.stop,
+                          icon: Icons.stop,
+                          color: AppColors.danger,
+                          onPressed: _stop,
+                        ),
                       ),
                     ],
                   ),
@@ -340,23 +425,36 @@ class _TimerScreenState extends State<TimerScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('✍️ ${s.manualAdd}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('✍️ ${s.manualAdd}',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
-                AppTextField(controller: _manualMinCtrl, label: s.durationMin, keyboardType: TextInputType.number, icon: Icons.timer),
+                AppTextField(
+                  controller: _manualMinCtrl,
+                  label: s.durationMin,
+                  keyboardType: TextInputType.number,
+                  icon: Icons.timer,
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.calendar_today, size: 16),
-                        label: Text(toJalaliDateTime(_manualDate), style: const TextStyle(fontSize: 12)),
+                        label: Text(toJalaliDateTime(_manualDate),
+                            style: const TextStyle(fontSize: 12)),
                         onPressed: _pickManualDate,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                PrimaryButton(label: s.manualAdd, icon: Icons.add, color: AppColors.secondary, onPressed: _manualAdd),
+                PrimaryButton(
+                  label: s.manualAdd,
+                  icon: Icons.add,
+                  color: AppColors.secondary,
+                  onPressed: _manualAdd,
+                ),
               ],
             ),
           ),
@@ -368,15 +466,21 @@ class _TimerScreenState extends State<TimerScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('📋 ${s.entries}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('${sorted.length}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    Text('📋 ${s.entries}',
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('${sorted.length}',
+                        style: const TextStyle(
+                            color: Colors.white54, fontSize: 12)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 if (sorted.isEmpty)
                   Padding(
                     padding: const EdgeInsets.all(20),
-                    child: Center(child: Text(s.noEntries, style: const TextStyle(color: Colors.white54))),
+                    child: Center(
+                        child: Text(s.noEntries,
+                            style: const TextStyle(color: Colors.white54))),
                   )
                 else
                   ...sorted.map((e) => _entryTile(context, e, s)),
@@ -403,9 +507,13 @@ class _TimerScreenState extends State<TimerScreen> {
         children: [
           Row(
             children: [
-              Expanded(child: Text('${e.domain} — ${e.minutes} ${s.minute}', style: const TextStyle(fontWeight: FontWeight.bold))),
+              Expanded(
+                child: Text('${e.domain} — ${e.minutes} ${s.minute}',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
               IconButton(
-                icon: const Icon(Icons.delete, color: AppColors.danger, size: 20),
+                icon: const Icon(Icons.delete,
+                    color: AppColors.danger, size: 20),
                 onPressed: () => _deleteEntry(e),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -413,11 +521,23 @@ class _TimerScreenState extends State<TimerScreen> {
             ],
           ),
           const SizedBox(height: 4),
-          Text('${toJalaliDateTime(start)} → ${timeOnly(end)}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          Text(
+            '${toJalaliDateTime(start)} → ${timeOnly(end)}',
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
           if (e.note.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('📝 ${e.note}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
+              child: Text('📝 ${e.note}',
+                  style: const TextStyle(
+                      color: Colors.white60, fontSize: 12)),
+            ),
+          if (e.alarmMinutes != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('⏰ ${e.alarmMinutes} ${s.minute}',
+                  style: const TextStyle(
+                      color: AppColors.warning, fontSize: 11)),
             ),
         ],
       ),
