@@ -1,4 +1,4 @@
-﻿class FinanceTransaction {
+class FinanceTransaction {
   final int id;
   final String type;
   final String category;

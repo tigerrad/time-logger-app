@@ -1,4 +1,4 @@
-﻿class Goal {
+class Goal {
   final int id;
   String title;
   String level;

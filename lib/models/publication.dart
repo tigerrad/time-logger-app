@@ -1,4 +1,4 @@
-﻿class Publication {
+class Publication {
   final int id;
   String title;
   String filePath;

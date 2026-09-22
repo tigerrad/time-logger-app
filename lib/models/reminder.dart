@@ -1,4 +1,4 @@
-﻿class Reminder {
+class Reminder {
   final int id;
   String title;
   String note;

@@ -1,4 +1,4 @@
-﻿class SavingTransaction {
+class SavingTransaction {
   final int id;
   final double amount;
   final String type;

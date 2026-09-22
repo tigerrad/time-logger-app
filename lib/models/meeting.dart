@@ -1,4 +1,4 @@
-﻿class Meeting {
+class Meeting {
   final int id;
   String title;
   String link;

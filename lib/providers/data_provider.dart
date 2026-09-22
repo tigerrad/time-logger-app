@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/domain.dart';
 import '../models/time_entry.dart';
 import '../models/goal.dart';
