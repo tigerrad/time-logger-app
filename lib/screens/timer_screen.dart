@@ -11,6 +11,8 @@ import '../models/time_entry.dart';
 import '../services/jalali.dart';
 import '../services/store.dart';
 import '../services/notification_service.dart';
+import '../services/alarm_service.dart';
+import 'package:file_picker/file_picker.dart';
 import '../widgets/common.dart';
 
 class TimerScreen extends StatefulWidget {
@@ -34,6 +36,9 @@ class _TimerScreenState extends State<TimerScreen> {
   int? _alarmAtSeconds;
   bool _alarmFired = false;
   AlarmType _alarmType = AlarmType.both;
+  AlarmSoundSource _soundSource = AlarmSoundSource.systemRingtone;
+  String? _customSoundPath;
+  final AlarmService _alarmService = AlarmService();
   DateTime _manualDate = DateTime.now();
 
   @override
@@ -101,7 +106,11 @@ class _TimerScreenState extends State<TimerScreen> {
 
       // پخش صدا و ویبره
       if (_alarmType == AlarmType.sound || _alarmType == AlarmType.both) {
-        SystemSound.play(SystemSoundType.alert);
+        if (_soundSource == AlarmSoundSource.customFile && _customSoundPath != null) {
+          await _alarmService.playCustomFile(_customSoundPath!);
+        } else {
+          await _alarmService.playSystemRingtone();
+        }
       }
       if (_alarmType == AlarmType.vibrate || _alarmType == AlarmType.both) {
         HapticFeedback.vibrate();
@@ -175,6 +184,7 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   Future<void> _stop({bool showMessage = true}) async {
+    await _alarmService.stop();
     if (_startTime == null) return;
     final data = context.read<DataProvider>();
     final s = S(context.read<LanguageProvider>().lang);
@@ -371,6 +381,56 @@ class _TimerScreenState extends State<TimerScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                // انتخاب منبع صدا
+                Row(
+                  children: [
+                    const Icon(Icons.music_note, color: AppColors.secondary),
+                    const SizedBox(width: 8),
+                    const Text('صدای آلارم:', style: TextStyle(fontSize: 14)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButton<AlarmSoundSource>(
+                        value: _soundSource,
+                        isExpanded: true,
+                        dropdownColor: AppColors.input,
+                        items: const [
+                          DropdownMenuItem(
+                              value: AlarmSoundSource.systemRingtone,
+                              child: Text('زنگ پیش‌فرض گوشی')),
+                          DropdownMenuItem(
+                              value: AlarmSoundSource.customFile,
+                              child: Text('فایل صوتی از گوشی')),
+                        ],
+                        onChanged: _isRunning
+                            ? null
+                            : (v) async {
+                                if (v == AlarmSoundSource.customFile) {
+                                  final result = await FilePicker.platform.pickFiles(
+                                    type: FileType.audio,
+                                  );
+                                  if (result != null && result.files.isNotEmpty) {
+                                    setState(() {
+                                      _customSoundPath = result.files.first.path;
+                                      _soundSource = AlarmSoundSource.customFile;
+                                    });
+                                  }
+                                } else {
+                                  setState(() => _soundSource = AlarmSoundSource.systemRingtone);
+                                }
+                              },
+                      ),
+                    ),
+                  ],
+                ),
+                if (_customSoundPath != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '📁 ${_customSoundPath!.split('\\').last}',
+                      style: const TextStyle(fontSize: 11, color: Colors.white60),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 Text(
                   _elapsedText(),

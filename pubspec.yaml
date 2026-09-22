@@ -1,5 +1,5 @@
-name: time_logger_app
-description: "تایم لاگر حرفه‌ای — سازنده: کورش شیراز"
+﻿name: time_logger_app
+description: "ØªØ§ÛŒÙ… Ù„Ø§Ú¯Ø± Ø­Ø±ÙÙ‡â€ŒØ§ÛŒ â€” Ø³Ø§Ø²Ù†Ø¯Ù‡: Ú©ÙˆØ±Ø´ Ø´ÛŒØ±Ø§Ø²"
 publish_to: 'none'
 version: 3.0.0+1
 
@@ -19,6 +19,8 @@ dependencies:
   fl_chart: ^0.69.0
   table_calendar: ^3.1.2
   file_picker: ^8.1.2
+  audioplayers: ^6.1.0
+  flutter_ringtone_player: ^4.0.0
   excel: ^4.0.3
   pdf: ^3.11.1
   flutter_pdfview: ^1.3.2
