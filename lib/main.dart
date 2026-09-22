@@ -1,59 +1,95 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'models/domain.dart';
 import 'models/time_entry.dart';
 import 'models/goal.dart';
 import 'models/saving.dart';
 import 'models/meeting.dart';
-import 'models/finance_transaction.dart';
-import 'models/finance_category.dart';
 import 'services/store.dart';
+import 'services/theme_service.dart';
+import 'services/language_service.dart';
+import 'services/locale_strings.dart';
 import 'screens/timer_screen.dart';
 import 'screens/goals_screen.dart';
 import 'screens/savings_screen.dart';
 import 'screens/meetings_screen.dart';
 import 'screens/reports_screen.dart';
-import 'screens/finance_screen.dart';
-import 'widgets/common.dart';
+import 'screens/settings_screen.dart';
 
 void main() {
   runApp(const TimeLoggerApp());
 }
 
-class TimeLoggerApp extends StatelessWidget {
+class TimeLoggerApp extends StatefulWidget {
   const TimeLoggerApp({super.key});
 
   @override
+  State<TimeLoggerApp> createState() => _TimeLoggerAppState();
+}
+
+class _TimeLoggerAppState extends State<TimeLoggerApp> {
+  final ThemeService _themeService = ThemeService();
+  final LanguageService _languageService = LanguageService();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeService.addListener(_onChange);
+    _languageService.addListener(_onChange);
+  }
+
+  @override
+  void dispose() {
+    _themeService.removeListener(_onChange);
+    _languageService.removeListener(_onChange);
+    super.dispose();
+  }
+
+  void _onChange() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l = L(_languageService.lang);
     return MaterialApp(
-      title: 'تایم لاگر — کورش شیراز',
+      title: l.appTitle,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.bg,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
-          surface: AppColors.surface,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF26262E),
-          foregroundColor: Colors.white,
-        ),
-        useMaterial3: true,
-      ),
+      theme: _themeService.theme,
+      locale: _languageService.locale,
+      supportedLocales: const [
+        Locale('fa', 'IR'),
+        Locale('en', 'US'),
+        Locale('ar', 'SA'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       builder: (context, child) {
         return Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: _languageService.direction,
           child: child!,
         );
       },
-      home: const HomePage(),
+      home: HomePage(
+        themeService: _themeService,
+        languageService: _languageService,
+      ),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final ThemeService themeService;
+  final LanguageService languageService;
+
+  const HomePage({
+    super.key,
+    required this.themeService,
+    required this.languageService,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -67,14 +103,23 @@ class _HomePageState extends State<HomePage> {
   List<Goal> goals = [];
   List<Saving> savings = [];
   List<Meeting> meetings = [];
-  List<FinanceTransaction> financeTransactions = [];
-  List<FinanceCategory> financeCategories = [];
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _loadAll();
+    widget.languageService.addListener(_onLangChange);
+  }
+
+  @override
+  void dispose() {
+    widget.languageService.removeListener(_onLangChange);
+    super.dispose();
+  }
+
+  void _onLangChange() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadAll() async {
@@ -83,31 +128,25 @@ class _HomePageState extends State<HomePage> {
     goals = await Store.loadGoals();
     savings = await Store.loadSavings();
     meetings = await Store.loadMeetings();
-    financeTransactions = await Store.loadFinanceTransactions();
-    financeCategories = await Store.loadFinanceCategories();
     if (!mounted) return;
     setState(() => _loading = false);
   }
 
-  Future<void> _saveEntries() async => await Store.saveEntries(entries);
-  Future<void> _saveGoals() async => await Store.saveGoals(goals);
-  Future<void> _saveSavings() async => await Store.saveSavings(savings);
-  Future<void> _saveMeetings() async => await Store.saveMeetings(meetings);
-  Future<void> _saveFinanceTransactions() async => await Store.saveFinanceTransactions(financeTransactions);
-  Future<void> _saveFinanceCategories() async => await Store.saveFinanceCategories(financeCategories);
-
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
+    final l = L(widget.languageService.lang);
 
     final pages = [
       TimerScreen(
         domains: domains,
         entries: entries,
         onChanged: () async {
-          await _saveEntries();
+          await Store.saveEntries(entries);
           if (!mounted) return;
           setState(() {});
         },
@@ -116,7 +155,7 @@ class _HomePageState extends State<HomePage> {
         domains: domains,
         goals: goals,
         onChanged: () async {
-          await _saveGoals();
+          await Store.saveGoals(goals);
           if (!mounted) return;
           setState(() {});
         },
@@ -124,7 +163,7 @@ class _HomePageState extends State<HomePage> {
       SavingsScreen(
         savings: savings,
         onChanged: () async {
-          await _saveSavings();
+          await Store.saveSavings(savings);
           if (!mounted) return;
           setState(() {});
         },
@@ -132,43 +171,36 @@ class _HomePageState extends State<HomePage> {
       MeetingsScreen(
         meetings: meetings,
         onChanged: () async {
-          await _saveMeetings();
-          if (!mounted) return;
-          setState(() {});
-        },
-      ),
-      FinanceScreen(
-        transactions: financeTransactions,
-        categories: financeCategories,
-        onChanged: () async {
-          await _saveFinanceTransactions();
-          await _saveFinanceCategories();
+          await Store.saveMeetings(meetings);
           if (!mounted) return;
           setState(() {});
         },
       ),
       ReportsScreen(entries: entries),
+      SettingsScreen(
+        themeService: widget.themeService,
+        languageService: widget.languageService,
+      ),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تایم لاگر — سازنده: کورش شیراز', style: TextStyle(fontSize: 14)),
+        title: Text(l.appTitle, style: const TextStyle(fontSize: 14)),
         centerTitle: true,
       ),
       body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-        backgroundColor: const Color(0xFF26262E),
-        indicatorColor: AppColors.primary.withOpacity(0.3),
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.timer, size: 22), label: 'تایم'),
-          NavigationDestination(icon: Icon(Icons.flag, size: 22), label: 'اهداف'),
-          NavigationDestination(icon: Icon(Icons.savings, size: 22), label: 'پس‌انداز'),
-          NavigationDestination(icon: Icon(Icons.event, size: 22), label: 'جلسات'),
-          NavigationDestination(icon: Icon(Icons.account_balance_wallet, size: 22), label: 'مالی'),
-          NavigationDestination(icon: Icon(Icons.bar_chart, size: 22), label: 'گزارش'),
+        backgroundColor: Theme.of(context).cardColor,
+        indicatorColor: widget.themeService.primaryColor.withOpacity(0.3),
+        destinations: [
+          NavigationDestination(icon: const Icon(Icons.timer), label: l.tabTimer),
+          NavigationDestination(icon: const Icon(Icons.flag), label: l.tabGoals),
+          NavigationDestination(icon: const Icon(Icons.savings), label: l.tabSavings),
+          NavigationDestination(icon: const Icon(Icons.event), label: l.tabMeetings),
+          NavigationDestination(icon: const Icon(Icons.bar_chart), label: l.tabReports),
+          NavigationDestination(icon: const Icon(Icons.settings), label: l.tabSettings),
         ],
       ),
     );
